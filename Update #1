@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniTuner Pro - Piece Coach</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --error: #cf6679;
+            --text: #e0e0e0;
+            --tuning-good: #4caf50;
+            --tuning-warn: #ff9800;
+            --gold: #ffd700;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        h1 { margin: 0; font-weight: 300; letter-spacing: 2px; color: var(--primary); }
+        p { color: #888; font-size: 0.9rem; }
+
+        /* Main Container */
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
+        }
+
+        /* Controls Header */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1rem;
+        }
+
+        select, button {
+            background: #333;
+            color: white;
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover, select:hover {
+            background: #444;
+            border-color: var(--primary);
+        }
+
+        button.active {
+            background: var(--primary);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Tuner Visualization */
+        .tuner-display {
+            position: relative;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gauge-container {
+            width: 300px;
+            height: 150px;
+            border-top-left-radius: 150px;
+            border-top-right-radius: 150px;
+            background: conic-gradient(from 180deg, #333 0%, #333 20%, var(--tuning-warn) 20%, var(--tuning-warn) 40%, var(--tuning-good) 40%, var(--tuning-good) 60%, var(--tuning-warn) 60%, var(--tuning-warn) 80%, #333 80%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .needle {
+            width: 4px;
+            height: 140px;
+            background: white;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.1s ease-out;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .center-knob {
+            width: 20px;
+            height: 20px;
+            background: #555;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .note-display {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(187, 134, 252, 0.3);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .detune-val {
+            position: absolute;
+            top: 85%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: #888;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100px;
+        }
+
+        /* Piece Manager Section */
+        .piece-manager {
+            border-top: 1px solid #333;
+            padding-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            resize: vertical;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .saved-pieces {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .save-btn {
+            background: #333;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .save-btn:hover { background: #444; color: white; }
+
+        /* Practice Display */
+        .practice-display {
+            background: #252525;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1rem;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .current-task-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .current-target-note {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Note List View */
+        .note-list-view {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .mini-note {
+            padding: 5px 8px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        .mini-note.active {
+            background: var(--primary);
+            color: black;
+            opacity: 1;
+            font-weight: bold;
+            transform: scale(1.1);
+        }
+
+        .mini-note.done {
+            background: var(--tuning-good);
+            color: black;
+            opacity: 0.8;
+        }
+
+        /* Results Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--primary);
+        }
+
+        .modal h2 { color: var(--gold); margin-top: 0; }
+        
+        .status-indicator {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            height: 20px;
+        }
+
+        .mic-active { color: var(--tuning-good); }
+        .mic-inactive { color: var(--error); }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>OmniTuner Pro</h1>
+    <p>Input your piece. Play along. Save progress.</p>
+</header>
+
+<div class="container">
+    
+    <!-- Instrument Selector -->
+    <div class="controls">
+        <select id="instrumentSelect">
+            <option value="standard">Standard Guitar (E A D G B E)</option>
+            <option value="bass">Bass Guitar (E A D G)</option>
+            <option value="violin">Violin (G D A E)</option>
+            <option value="cello">Cello (C G D A)</option>
+            <option value="ukulele">Ukulele (G C E A)</option>
+            <option value="custom">Custom / Voice</option>
+        </select>
+        
+        <div>
+            <button id="micBtn" onclick="toggleMic()">Start Mic</button>
+        </div>
+    </div>
+
+    <!-- Tuner Visuals -->
+    <div class="tuner-display">
+        <div class="gauge-container">
+            <div class="needle" id="needle"></div>
+            <div class="center-knob"></div>
+        </div>
+        <div class="note-display" id="noteDisplay">--</div>
+        <div class="detune-val" id="centsDisplay">0 cents</div>
+    </div>
+
+    <!-- Reference Tone Input -->
+    <div class="input-area">
+        <label style="align-self: center;">Reference Pitch (Hz):</label>
+        <input type="number" id="freqInput" value="440" min="20" max="5000">
+        <button onclick="playReference()">Play Tone</button>
+    </div>
+
+    <!-- Piece Manager -->
+    <div class="piece-manager">
+        <h3>Your Piece</h3>
+        <textarea id="noteInput" placeholder="Enter notes here (e.g., C D E F G A B)... separated by spaces or commas."></textarea>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button id="startBtn" onclick="startPractice()" disabled>Start Practice</button>
+            <button onclick="saveCurrentPiece()">Save This Piece</button>
+        </div>
+
+        <div class="saved-pieces">
+            <span style="font-size:0.9rem; color:#888; align-self:center;">Saved Pieces:</span>
+            <div id="savedListContainer" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+        </div>
+    </div>
+
+    <!-- Active Practice Mode -->
+    <div id="practiceMode" style="display:none;">
+        <div class="practice-display">
+            <div class="current-task-label">PLAY THIS NOTE:</div>
+            <div class="current-target-note" id="targetNoteDisplay">--</div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            
+            <div style="margin-top:10px; font-size:0.8rem; color:#666;" id="sequenceInfo">
+                Sequence: 0/0
+            </div>
+        </div>
+
+        <div class="note-list-view" id="noteListView">
+            <!-- Generated JS -->
+        </div>
+    </div>
+
+    <div class="status-indicator" id="statusMsg"></div>
+
+</div>
+
+<!-- Results Modal -->
+<div id="resultsModal" class="modal">
+    <div class="modal-content">
+        <h2>Great Job!</h2>
+        <p>You completed the sequence.</p>
+        <p id="accuracyStats">Accuracy: 100%</p>
+        <button onclick="closeModal()">Close & Reset</button>
+    </div>
+</div>
+
+<script>
+    // --- Configuration ---
+    const NOTE_STRINGS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const INSTRUMENTS = {
+        standard: ["E2", "A2", "D3", "G3", "B3", "E4"],
+        bass: ["E1", "A1", "D2", "G2"],
+        violin: ["G3", "D4", "A4", "E5"],
+        cello: ["C2", "G2", "D3", "A3"],
+        ukulele: ["G4", "C4", "E4", "A4"],
+        custom: []
+    };
+
+    let audioContext = null;
+    let analyser = null;
+    let mediaStreamSource = null;
+    let isListening = false;
+    let animationId = null;
+    let currentInstrument = "standard";
+    
+    // Elements
+    const needle = document.getElementById('needle');
+    const noteDisplay = document.getElementById('noteDisplay');
+    const centsDisplay = document.getElementById('centsDisplay');
+    const micBtn = document.getElementById('micBtn');
+    const freqInput = document.getElementById('freqInput');
+    const statusMsg = document.getElementById('statusMsg');
+    const noteInput = document.getElementById('noteInput');
+    const startBtn = document.getElementById('startBtn');
+    const practiceMode = document.getElementById('practiceMode');
+    const targetNoteDisplay = document.getElementById('targetNoteDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const sequenceInfo = document.getElementById('sequenceInfo');
+    const noteListView = document.getElementById('noteListView');
+    const resultsModal = document.getElementById('resultsModal');
+
+    // State Variables for Practice
+    let noteSequence = [];
+    let currentIndex = 0;
+    let mistakes = 0;
+    let totalNotes = 0;
+
+    // --- Initialization ---
+    document.getElementById('instrumentSelect').addEventListener('change', (e) => {
+        currentInstrument = e.target.value;
+        statusMsg.textContent = `Selected: ${currentInstrument.toUpperCase()}`;
+        if(isListening) toggleMic(); 
+    });
+
+    // Load Saved Pieces on Start
+    loadSavedPiecesUI();
+
+    // --- Audio Logic ---
+
+    async function toggleMic() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (isListening) {
+            // Stop
+            isListening = false;
+            micBtn.innerText = "Start Mic";
+            micBtn.classList.remove('active');
+            cancelAnimationFrame(animationId);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, autoGainControl: false } });
+            mediaStreamSource = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            mediaStreamSource.connect(analyser);
+            
+            isListening = true;
+            micBtn.innerText = "Stop Mic";
+            micBtn.classList.add('active');
+            updatePitch();
+        } catch (err) {
+            alert("Microphone access denied or error: " + err);
+        }
+    }
+
+    // Autocorrelation Pitch Detection Algorithm
+    function autoCorrelate(buf, sampleRate) {
+        let SIZE = buf.length;
+        let rms = 0;
+
+        for (let i = 0; i < SIZE; i++) {
+            let val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+
+        if (rms < 0.01) return -1; 
+
+        let lag = -1;
+        let maxCorr = -Infinity;
+        
+        // Optimized search range
+        let startLag = Math.floor(sampleRate / 2000); 
+        let endLag = Math.floor(sampleRate / 50);
+        
+        if(endLag > SIZE/2) endLag = SIZE/2;
+
+        for (let i = startLag; i < endLag; i++) {
+             let c = 0;
+             for(let j=0; j<endLag; j++) {
+                 c += buf[j] * buf[j+i];
+             }
+             if(c > maxCorr) {
+                 maxCorr = c;
+                 lag = i;
+             }
+        }
+
+        if (lag === -1) return -1;
+
+        let x1 = lag - 1, x2 = lag, x3 = lag + 1;
+        let y1 = getCorr(x1), y2 = getCorr(x2), y3 = getCorr(x3);
+        
+        function getCorr(l) {
+            if(l < 0 || l >= SIZE/2) return 0;
+            let sum = 0;
+            for(let j=0; j<SIZE-l; j++) sum += buf[j]*buf[j+l];
+            return sum;
+        }
+
+        let shift = (2 * y2 - y1 - y3) / (2 * (y1 + y3) - 4 * y2);
+        let period = lag + shift;
+        return sampleRate / period;
+    }
+
+    function updatePitch() {
+        if (!isListening) return;
+
+        let buf = new Float32Array(analyser.fftSize);
+        analyser.getFloatTimeDomainData(buf);
+        
+        let freq = autoCorrelate(buf, audioContext.sampleRate);
+
+        if (freq !== -1) {
+            let noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
+            let note = Math.round(noteNum);
+            let detune = 1200 * Math.log(freq / (440 * Math.pow(2, (note - 69) / 12))) / Math.log(2);
+
+            // Update UI
+            let noteName = NOTE_STRINGS[note % 12];
+            noteDisplay.innerText = noteName;
+            
+            // Clamp detune for visual (-50 to 50 cents)
+            let clampedDetune = Math.max(-50, Math.min(50, detune));
+            let rotation = (clampedDetune / 50) * 45; 
+            
+            needle.style.transform = `rotate(${rotation}deg)`;
+            
+            // Color logic
+            if(Math.abs(detune) < 10) {
+                noteDisplay.style.color = "#4caf50"; 
+                centsDisplay.innerText = "In Tune";
+                
+                // Check against sequence
+                checkSequenceMatch(noteName);
+            } else {
+                noteDisplay.style.color = "#cf6679"; 
+                centsDisplay.innerText = (detune > 0 ? "+" : "") + Math.round(detune) + " cents";
+            }
+        }
+
+        animationId = requestAnimationFrame(updatePitch);
+    }
+
+    // --- Practice Logic ---
+
+    function parseNotes(text) {
+        // Split by space, comma, newline. Remove empty strings.
+        return text.split(/[\s,]+/).filter(n => n.length > 0);
+    }
+
+    function startPractice() {
+        const rawText = noteInput.value;
+        if(!rawText.trim()) {
+            alert("Please enter some notes first.");
+            return;
+        }
+
+        noteSequence = parseNotes(rawText);
+        if(noteSequence.length === 0) return;
+
+        currentIndex = 0;
+        mistakes = 0;
+        totalNotes = noteSequence.length;
+        
+        // Setup UI
+        startBtn.disabled = true;
+        noteInput.disabled = true;
+        practiceMode.style.display = 'block';
+        renderNoteList();
+        updateTargetDisplay();
+        
+        statusMsg.textContent = "Playing... Keep your microphone active.";
+    }
+
+    function renderNoteList() {
+        noteListView.innerHTML = '';
+        noteSequence.forEach((note, index) => {
+            const div = document.createElement('div');
+            div.className = 'mini-note';
+            div.innerText = note;
+            div.id = `seq-${index}`;
+            noteListView.appendChild(div);
+        });
+    }
+
+    function updateTargetDisplay() {
+        if(currentIndex < totalNotes) {
+            targetNoteDisplay.innerText = noteSequence[currentIndex];
+            sequenceInfo.innerText = `Sequence: ${currentIndex + 1}/${totalNotes}`;
+            
+            // Update progress bar
+            const pct = (currentIndex / totalNotes) * 100;
+            progressBar.style.width = `${pct}%`;
+
+            // Highlight active note in list
+            document.querySelectorAll('.mini-note').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`seq-${currentIndex}`);
+            if(activeEl) activeEl.classList.add('active');
+        } else {
+            finishPractice();
+        }
+    }
+
+    function checkSequenceMatch(detectedNote) {
+        if(currentIndex >= totalNotes) return;
+
+        const expectedNote = noteSequence[currentIndex].toUpperCase();
+        
+        if(detectedNote.toUpperCase() === expectedNote) {
+            // Correct!
+            const currentEl = document.getElementById(`seq-${currentIndex}`);
+            if(currentEl) {
+                currentEl.classList.remove('active');
+                currentEl.classList.add('done');
+            }
+            
+            currentIndex++;
+            updateTargetDisplay();
+        } else {
+            // Wrong note detected (optional: could add visual feedback for wrong note)
+        }
+    }
+
+    function finishPractice() {
+        stopPractice();
+        const accuracy = Math.round(((totalNotes - mistakes) / totalNotes) * 100);
+        document.getElementById('accuracyStats').innerText = `Accuracy: ~${accuracy}% (based on flow)`;
+        resultsModal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        resultsModal.style.display = 'none';
+        resetPractice();
+    }
+
+    function stopPractice() {
+        // Just pause logic visually, keep mic running if user wants to continue tuning
+        // But usually we stop the sequence logic
+        statusMsg.textContent = "Finished.";
+    }
+
+    function resetPractice() {
+        practiceMode.style.display = 'none';
+        startBtn.disabled = false;
+        noteInput.disabled = false;
+        targetNoteDisplay.innerText = "--";
+        progressBar.style.width = "0%";
+        sequenceInfo.innerText = "";
+    }
+
+    // --- Helper Functions ---
+
+    function playReference() {
+        const freq = parseFloat(freqInput.value);
+        if(!freq) return;
+        playTone(freq);
+    }
+
+    function playTone(freq) {
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        osc.start();
+        osc.stop(audioContext.currentTime + 1);
+    }
+
+    // --- Local Storage Logic ---
+
+    function saveCurrentPiece() {
+        const text = noteInput.value;
+        if(!text.trim()) return;
+
+        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
+        
+        // Add to beginning, remove duplicates, limit to 5
+        const existingIndex = saved.findIndex(p => p.text === text);
+        if(existingIndex > -1) saved.splice(existingIndex, 1);
+        
+        saved.unshift({
+            name: `Piece ${saved.length + 1}`,
+            text: text,
+            date: new Date().toLocaleDateString()
+        });
+
+        if(saved.length > 5) saved.pop();
+
+        localStorage.setItem('omnituner_pieces', JSON.stringify(saved));
+        loadSavedPiecesUI();
+        statusMsg.textContent = "Piece saved!";
+    }
+
+    function loadSavedPiecesUI() {
+        const container = document.getElementById('savedListContainer');
+        container.innerHTML = '';
+        
+        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
+        
+        saved.forEach((item, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'save-btn';
+            btn.innerText = item.name;
+            btn.onclick = () => loadPiece(index);
+            container.appendChild(btn);
+        });
+    }
+
+    function loadPiece(index) {
+        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
+        if(saved[index]) {
+            noteInput.value = saved[index].text;
+            statusMsg.textContent = `Loaded: ${saved[index].name}`;
+            // Auto-start if desired, but better to let user click start
+        }
+    }
+
+</script>
+</body>
+</html>
