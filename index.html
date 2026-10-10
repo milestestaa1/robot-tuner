@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniTuner - Universal String & Note Tool</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --error: #cf6679;
+            --text: #e0e0e0;
+            --tuning-good: #4caf50;
+            --tuning-warn: #ff9800;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
+        p { color: #888; font-size: 0.9rem; }
+
+        /* Main Container */
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
+        }
+
+        /* Instrument Selector */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        select, button {
+            background: #333;
+            color: white;
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover, select:hover {
+            background: #444;
+            border-color: var(--primary);
+        }
+
+        button.active {
+            background: var(--primary);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Tuner Visualization */
+        .tuner-display {
+            position: relative;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .gauge-container {
+            width: 300px;
+            height: 150px;
+            border-top-left-radius: 150px;
+            border-top-right-radius: 150px;
+            background: conic-gradient(from 180deg, #333 0%, #333 20%, var(--tuning-warn) 20%, var(--tuning-warn) 40%, var(--tuning-good) 40%, var(--tuning-good) 60%, var(--tuning-warn) 60%, var(--tuning-warn) 80%, #333 80%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .needle {
+            width: 4px;
+            height: 140px;
+            background: white;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.1s ease-out;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .center-knob {
+            width: 20px;
+            height: 20px;
+            background: #555;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .note-display {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(187, 134, 252, 0.3);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .detune-val {
+            position: absolute;
+            top: 85%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: #888;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        input[type="number"] {
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100px;
+        }
+
+        /* Reference / Improvement Section */
+        .reference-section {
+            border-top: 1px solid #333;
+            padding-top: 2rem;
+        }
+
+        .fretboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .note-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 15px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .note-btn:hover {
+            background: var(--secondary);
+            color: #000;
+        }
+
+        .status-indicator {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            height: 20px;
+        }
+
+        .mic-active { color: var(--tuning-good); }
+        .mic-inactive { color: var(--error); }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>OmniTuner</h1>
+    <p>Universal String Tuner & Practice Companion</p>
+</header>
+
+<div class="container">
+    <div class="controls">
+        <select id="instrumentSelect">
+            <option value="standard">Standard Guitar (E A D G B E)</option>
+            <option value="bass">Bass Guitar (E A D G)</option>
+            <option value="violin">Violin (G D A E)</option>
+            <option value="cello">Cello (C G D A)</option>
+            <option value="ukulele">Ukulele (G C E A)</option>
+            <option value="custom">Custom / Voice</option>
+        </select>
+        
+        <div>
+            <button id="micBtn" onclick="toggleMic()">Start Tuner</button>
+        </div>
+    </div>
+
+    <div class="tuner-display">
+        <div class="gauge-container">
+            <div class="needle" id="needle"></div>
+            <div class="center-knob"></div>
+        </div>
+        <div class="note-display" id="noteDisplay">--</div>
+        <div class="detune-val" id="centsDisplay">0 cents</div>
+    </div>
+
+    <div class="input-area">
+        <label style="align-self: center;">Or type a Frequency (Hz):</label>
+        <input type="number" id="freqInput" placeholder="440" min="20" max="5000">
+        <button onclick="playReference()">Play Tone</button>
+    </div>
+
+    <div class="reference-section">
+        <h3>Practice / Reference Notes</h3>
+        <p>Click a note to hear it and visualize the interval.</p>
+        <div class="fretboard-grid" id="chromaticGrid">
+            <!-- Generated by JS -->
+        </div>
+        <div class="status-indicator" id="statusMsg"></div>
+    </div>
+</div>
+
+<script>
+    // --- Configuration ---
+    const NOTE_STRINGS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const INSTRUMENTS = {
+        standard: ["E2", "A2", "D3", "G3", "B3", "E4"],
+        bass: ["E1", "A1", "D2", "G2"],
+        violin: ["G3", "D4", "A4", "E5"],
+        cello: ["C2", "G2", "D3", "A3"],
+        ukulele: ["G4", "C4", "E4", "A4"],
+        custom: []
+    };
+
+    let audioContext = null;
+    let analyser = null;
+    let mediaStreamSource = null;
+    let isListening = false;
+    let animationId = null;
+    let currentInstrument = "standard";
+    
+    // Elements
+    const needle = document.getElementById('needle');
+    const noteDisplay = document.getElementById('noteDisplay');
+    const centsDisplay = document.getElementById('centsDisplay');
+    const micBtn = document.getElementById('micBtn');
+    const freqInput = document.getElementById('freqInput');
+    const statusMsg = document.getElementById('statusMsg');
+
+    // --- Initialization ---
+    document.getElementById('instrumentSelect').addEventListener('change', (e) => {
+        currentInstrument = e.target.value;
+        statusMsg.textContent = `Selected: ${currentInstrument.toUpperCase()}`;
+        // Stop listening when switching instruments
+        if(isListening) toggleMic(); 
+    });
+
+    // Generate Chromatic Grid
+    const grid = document.getElementById('chromaticGrid');
+    NOTE_STRINGS.forEach(note => {
+        const btn = document.createElement('div');
+        btn.className = 'note-btn';
+        btn.innerText = note;
+        btn.onclick = () => playReferenceNote(note);
+        grid.appendChild(btn);
+    });
+
+    // --- Audio Logic ---
+
+    async function toggleMic() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (isListening) {
+            // Stop
+            isListening = false;
+            micBtn.innerText = "Start Tuner";
+            micBtn.classList.remove('active');
+            cancelAnimationFrame(animationId);
+            noteDisplay.innerText = "--";
+            needle.style.transform = `rotate(0deg)`;
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, autoGainControl: false } });
+            mediaStreamSource = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            mediaStreamSource.connect(analyser);
+            
+            isListening = true;
+            micBtn.innerText = "Stop Tuner";
+            micBtn.classList.add('active');
+            updatePitch();
+        } catch (err) {
+            alert("Microphone access denied or error: " + err);
+        }
+    }
+
+    // Autocorrelation Pitch Detection Algorithm
+    function autoCorrelate(buf, sampleRate) {
+        let SIZE = buf.length;
+        let rms = 0;
+
+        for (let i = 0; i < SIZE; i++) {
+            let val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+
+        if (rms < 0.01) return -1; // Too quiet
+
+        let r1 = 0, r2 = SIZE / 2;
+        let wf1 = new Float32Array(SIZE);
+        let wf2 = new Float32Array(SIZE);
+
+        for (let i = 0; i < SIZE; i++) {
+            wf1[i] = buf[i];
+            wf2[i] = buf[i + SIZE / 2];
+        }
+
+        let correlation = 0;
+        for(let i=0; i<SIZE/2; i++){
+            for(let j=0; j<SIZE/2; j++){
+                correlation += wf1[j] * wf2[j+i];
+            }
+        }
+        
+        // Find peak
+        let maxCorr = -Infinity;
+        let lag = -1;
+        
+        // Optimized search around expected range (approx 50Hz to 2000Hz)
+        let startLag = Math.floor(sampleRate / 2000); 
+        let endLag = Math.floor(sampleRate / 50);
+        
+        if(endLag > SIZE/2) endLag = SIZE/2;
+
+        for (let i = startLag; i < endLag; i++) {
+             let c = 0;
+             for(let j=0; j<endLag; j++) {
+                 c += buf[j]*buf[j+i];
+             }
+             if(c > maxCorr) {
+                 maxCorr = c;
+                 lag = i;
+             }
+        }
+
+        if (lag === -1) return -1;
+
+        // Refine with quadratic interpolation
+        let x1 = lag - 1, x2 = lag, x3 = lag + 1;
+        let y1 = getCorr(x1), y2 = getCorr(x2), y3 = getCorr(x3);
+        
+        function getCorr(l) {
+            if(l < 0 || l >= SIZE/2) return 0;
+            let sum = 0;
+            for(let j=0; j<SIZE-l; j++) sum += buf[j]*buf[j+l];
+            return sum;
+        }
+
+        let shift = (2 * y2 - y1 - y3) / (2 * (y1 + y3) - 4 * y2);
+        let period = lag + shift;
+        return sampleRate / period;
+    }
+
+    function updatePitch() {
+        if (!isListening) return;
+
+        let buf = new Float32Array(analyser.fftSize);
+        analyser.getFloatTimeDomainData(buf);
+        
+        let freq = autoCorrelate(buf, audioContext.sampleRate);
+
+        if (freq !== -1) {
+            let noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
+            let note = Math.round(noteNum);
+            let detune = 1200 * Math.log(freq / (440 * Math.pow(2, (note - 69) / 12))) / Math.log(2);
+
+            // Update UI
+            let noteName = NOTE_STRINGS[note % 12];
+            noteDisplay.innerText = noteName;
+            
+            // Clamp detune for visual (-50 to 50 cents)
+            let clampedDetune = Math.max(-50, Math.min(50, detune));
+            let rotation = (clampedDetune / 50) * 45; // 45 degrees max swing
+            
+            needle.style.transform = `rotate(${rotation}deg)`;
+            
+            // Color logic
+            if(Math.abs(detune) < 5) {
+                noteDisplay.style.color = "#4caf50"; // Green
+                centsDisplay.innerText = "In Tune";
+            } else {
+                noteDisplay.style.color = "#cf6679"; // Red/Warning
+                centsDisplay.innerText = (detune > 0 ? "+" : "") + Math.round(detune) + " cents";
+            }
+        }
+
+        animationId = requestAnimationFrame(updatePitch);
+    }
+
+    // --- Reference Tone Generator ---
+    function playReference() {
+        const freq = parseFloat(freqInput.value);
+        if(!freq) return;
+        playTone(freq);
+    }
+
+    function playReferenceNote(noteName) {
+        // Find nearest octave based on context (defaulting to middle octave)
+        let midi = NOTE_STRINGS.indexOf(noteName) + 60; // Start at C4
+        // Simple check to find closest frequency to user's input if available, else default
+        let targetFreq = 440 * Math.pow(2, (midi - 69) / 12);
+        
+        // If we have a detected pitch nearby, snap to that octave
+        // (Simplified: just plays standard MIDI note)
+        playTone(targetFreq);
+        
+        // Visual feedback
+        noteDisplay.innerText = noteName;
+        noteDisplay.style.color = "#bb86fc";
+        setTimeout(() => { 
+            if(isListening) noteDisplay.style.color = ""; 
+        }, 500);
+    }
+
+    function playTone(freq) {
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        osc.start();
+        osc.stop(audioContext.currentTime + 1);
+    }
+
+</script>
+</body>
+</html>
