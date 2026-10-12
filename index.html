@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniTuner Pro - Piece Coach</title>
+    <title>ProString Tuner & Coach Pro</title>
     <style>
         :root {
             --bg: #121212;
             --surface: #1e1e1e;
+            --surface-hover: #2a2a2a;
             --primary: #bb86fc;
             --secondary: #03dac6;
             --error: #cf6679;
             --text: #e0e0e0;
+            --text-muted: #888;
             --tuning-good: #4caf50;
             --tuning-warn: #ff9800;
-            --gold: #ffd700;
+            --string-open: #bb86fc; 
+            --string-fretted: #03dac6; 
+            --highlight: #ffd700;
+            --border: #333;
         }
 
         body {
@@ -26,77 +31,87 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding-bottom: 50px;
         }
 
         header {
             text-align: center;
             padding: 1rem;
-        }
-
-        h1 { margin: 0; font-weight: 300; letter-spacing: 2px; color: var(--primary); }
-        p { color: #888; font-size: 0.9rem; }
-
-        /* Main Container */
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 2rem;
-        }
-
-        /* Controls Header */
-        .controls {
+            width: 100%;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border-bottom: 1px solid #333;
-            padding-bottom: 1rem;
+            max-width: 900px;
         }
 
-        select, button {
-            background: #333;
-            color: white;
-            border: 1px solid #444;
-            padding: 10px 20px;
+        h1 { margin: 0; font-weight: 300; letter-spacing: 1px; font-size: 1.5rem; }
+        
+        .user-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.9rem;
         }
 
-        button:hover, select:hover {
-            background: #444;
-            border-color: var(--primary);
+        button:hover { background: var(--surface-hover); border-color: var(--primary); }
+        button.primary { background: var(--primary); color: #000; font-weight: bold; border: none; }
+        button.danger { border-color: var(--error); color: var(--error); }
+        button.danger:hover { background: var(--error); color: white; }
+
+        /* Container */
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
 
-        button.active {
-            background: var(--primary);
-            color: #000;
-            font-weight: bold;
+        @media (min-width: 768px) {
+            .container { grid-template-columns: 1fr 1fr; }
+            .full-width { grid-column: span 2; }
         }
 
-        /* Tuner Visualization */
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        h3 { margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-muted); }
+
+        /* Tuner */
         .tuner-display {
             position: relative;
-            height: 200px;
+            height: 180px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .gauge-container {
-            width: 300px;
-            height: 150px;
-            border-top-left-radius: 150px;
-            border-top-right-radius: 150px;
+            width: 260px;
+            height: 130px;
+            border-top-left-radius: 130px;
+            border-top-right-radius: 130px;
             background: conic-gradient(from 180deg, #333 0%, #333 20%, var(--tuning-warn) 20%, var(--tuning-warn) 40%, var(--tuning-good) 40%, var(--tuning-good) 60%, var(--tuning-warn) 60%, var(--tuning-warn) 80%, #333 80%);
             position: relative;
             overflow: hidden;
@@ -104,7 +119,7 @@
 
         .needle {
             width: 4px;
-            height: 140px;
+            height: 120px;
             background: white;
             position: absolute;
             bottom: 0;
@@ -130,13 +145,12 @@
 
         .note-display {
             position: absolute;
-            top: 60%;
+            top: 55%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: bold;
             color: var(--primary);
-            text-shadow: 0 0 20px rgba(187, 134, 252, 0.3);
             z-index: 4;
             pointer-events: none;
         }
@@ -146,335 +160,468 @@
             top: 85%;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 1rem;
-            color: #888;
+            font-size: 0.9rem;
+            color: var(--text-muted);
         }
 
-        /* Input Area */
-        .input-area {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
+        /* String Indicator */
+        .target-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: #252525;
+            color: var(--string-open);
+            font-weight: bold;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
+            border: 1px solid var(--border);
         }
 
-        input[type="number"] {
-            background: #333;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
+        /* Piece List */
+        .piece-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .piece-item {
+            background: #252525;
+            padding: 12px;
+            margin-bottom: 8px;
             border-radius: 6px;
-            width: 100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-left: 4px solid transparent;
         }
 
-        /* Piece Manager Section */
-        .piece-manager {
-            border-top: 1px solid #333;
-            padding-top: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
+        .piece-item:hover { background: #333; }
+        .piece-item.active { border-left-color: var(--highlight); background: #333; }
 
-        textarea {
-            width: 100%;
-            height: 100px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
-            resize: vertical;
-            margin-bottom: 10px;
-            font-family: monospace;
-        }
+        .piece-actions { display: flex; gap: 5px; }
+        .piece-actions button { padding: 4px 8px; font-size: 0.8rem; }
 
-        .saved-pieces {
+        /* Note Input & Table */
+        .input-row {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        .save-btn {
-            background: #333;
-            border: 1px solid #444;
-            color: #aaa;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .save-btn:hover { background: #444; color: white; }
-
-        /* Practice Display */
-        .practice-display {
-            background: #252525;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
             margin-bottom: 1rem;
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .current-task-label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 5px;
-        }
-
-        .current-target-note {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--secondary);
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* Note List View */
-        .note-list-view {
-            display: flex;
             flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
-            margin-top: 1rem;
         }
 
-        .mini-note {
-            padding: 5px 8px;
+        input, select {
             background: #333;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px;
             border-radius: 4px;
+            flex-grow: 1;
+        }
+
+        .note-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .note-table th, .note-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .note-row { transition: background 0.2s; }
+        .note-row.active { background: rgba(255, 215, 0, 0.1); border-left: 2px solid var(--highlight); }
+        .note-row.played { opacity: 0.6; }
+
+        .feedback-cell {
             font-size: 0.8rem;
-            opacity: 0.5;
-        }
-
-        .mini-note.active {
-            background: var(--primary);
-            color: black;
-            opacity: 1;
             font-weight: bold;
-            transform: scale(1.1);
         }
+        .fb-ok { color: var(--tuning-good); }
+        .fb-warn { color: var(--tuning-warn); }
+        .fb-err { color: var(--error); }
 
-        .mini-note.done {
-            background: var(--tuning-good);
-            color: black;
-            opacity: 0.8;
-        }
-
-        /* Results Modal */
-        .modal {
-            display: none;
+        /* Modal */
+        .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8);
-            z-index: 100;
+            display: none;
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
-
-        .modal-content {
+        .modal {
             background: var(--surface);
             padding: 2rem;
             border-radius: 12px;
-            text-align: center;
-            max-width: 400px;
             width: 90%;
+            max-width: 400px;
             border: 1px solid var(--primary);
         }
+        .modal h2 { margin-top: 0; }
+        .modal-input { width: 100%; margin-bottom: 1rem; box-sizing: border-box; }
 
-        .modal h2 { color: var(--gold); margin-top: 0; }
-        
-        .status-indicator {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            height: 20px;
-        }
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .tab-btn { flex: 1; text-align: center; background: #252525; }
+        .tab-btn.active { background: var(--primary); color: #000; }
 
-        .mic-active { color: var(--tuning-good); }
-        .mic-inactive { color: var(--error); }
+        .hidden { display: none !important; }
+
+        /* Login Form */
+        .login-form { display: flex; flex-direction: column; gap: 10px; }
+        .login-error { color: var(--error); font-size: 0.8rem; min-height: 1.2em; }
 
     </style>
 </head>
 <body>
 
 <header>
-    <h1>OmniTuner Pro</h1>
-    <p>Input your piece. Play along. Save progress.</p>
+    <h1>ProString Coach</h1>
+    <div class="user-controls" id="userPanel">
+        <!-- Injected by JS -->
+    </div>
 </header>
 
 <div class="container">
     
-    <!-- Instrument Selector -->
-    <div class="controls">
-        <select id="instrumentSelect">
-            <option value="standard">Standard Guitar (E A D G B E)</option>
-            <option value="bass">Bass Guitar (E A D G)</option>
-            <option value="violin">Violin (G D A E)</option>
-            <option value="cello">Cello (C G D A)</option>
-            <option value="ukulele">Ukulele (G C E A)</option>
-            <option value="custom">Custom / Voice</option>
-        </select>
-        
-        <div>
-            <button id="micBtn" onclick="toggleMic()">Start Mic</button>
-        </div>
-    </div>
-
-    <!-- Tuner Visuals -->
-    <div class="tuner-display">
-        <div class="gauge-container">
-            <div class="needle" id="needle"></div>
-            <div class="center-knob"></div>
-        </div>
-        <div class="note-display" id="noteDisplay">--</div>
-        <div class="detune-val" id="centsDisplay">0 cents</div>
-    </div>
-
-    <!-- Reference Tone Input -->
-    <div class="input-area">
-        <label style="align-self: center;">Reference Pitch (Hz):</label>
-        <input type="number" id="freqInput" value="440" min="20" max="5000">
-        <button onclick="playReference()">Play Tone</button>
-    </div>
-
-    <!-- Piece Manager -->
-    <div class="piece-manager">
-        <h3>Your Piece</h3>
-        <textarea id="noteInput" placeholder="Enter notes here (e.g., C D E F G A B)... separated by spaces or commas."></textarea>
-        
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button id="startBtn" onclick="startPractice()" disabled>Start Practice</button>
-            <button onclick="saveCurrentPiece()">Save This Piece</button>
-        </div>
-
-        <div class="saved-pieces">
-            <span style="font-size:0.9rem; color:#888; align-self:center;">Saved Pieces:</span>
-            <div id="savedListContainer" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
-        </div>
-    </div>
-
-    <!-- Active Practice Mode -->
-    <div id="practiceMode" style="display:none;">
-        <div class="practice-display">
-            <div class="current-task-label">PLAY THIS NOTE:</div>
-            <div class="current-target-note" id="targetNoteDisplay">--</div>
-            
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-            
-            <div style="margin-top:10px; font-size:0.8rem; color:#666;" id="sequenceInfo">
-                Sequence: 0/0
+    <!-- Left Column: Tuner & Input -->
+    <div class="card full-width" style="grid-column: span 1;">
+        <div class="controls" style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+            <select id="instrumentSelect">
+                <option value="violin">Violin (G D A E)</option>
+                <option value="guitar">Standard Guitar (E A D G B E)</option>
+                <option value="bass">Bass Guitar (E A D G)</option>
+                <option value="cello">Cello (C G D A)</option>
+                <option value="ukulele">Ukulele (G C E A)</option>
+            </select>
+            <div>
+                <button id="modeBtn" onclick="toggleMode()">Mode: Open Strings</button>
+                <button id="micBtn" onclick="toggleMic()">Start Mic</button>
             </div>
         </div>
 
-        <div class="note-list-view" id="noteListView">
-            <!-- Generated JS -->
+        <div class="target-indicator" id="targetDisplay">Target: Violin Open Strings</div>
+
+        <div class="tuner-display">
+            <div class="gauge-container">
+                <div class="needle" id="needle"></div>
+                <div class="center-knob"></div>
+            </div>
+            <div class="note-display" id="noteDisplay">--</div>
+            <div class="detune-val" id="centsDisplay">0 cents</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:1rem;">
+            <input type="number" id="freqInput" placeholder="Frequency (Hz)" style="flex:1;">
+            <button onclick="playReference()">Play Ref Tone</button>
         </div>
     </div>
 
-    <div class="status-indicator" id="statusMsg"></div>
+    <!-- Right Column: Piece Manager -->
+    <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('editor')">Editor</button>
+            <button class="tab-btn" onclick="switchTab('library')">Library</button>
+        </div>
+
+        <!-- Editor Tab -->
+        <div id="tab-editor">
+            <h2>Edit Piece</h2>
+            <div style="margin-bottom:1rem;">
+                <input type="text" id="pieceNameInput" placeholder="Piece Name (e.g., Minuet in G)">
+                <button class="primary" onclick="saveCurrentPiece()" style="width:100%">Save / Update Piece</button>
+            </div>
+            
+            <div class="input-row">
+                <select id="noteStringSelect">
+                    <!-- Populated by JS -->
+                </select>
+                <select id="noteFretSelect">
+                    <option value="0">Open</option>
+                    <option value="1">1st Fret</option>
+                    <option value="2">2nd Fret</option>
+                    <option value="3">3rd Fret</option>
+                    <option value="4">4th Fret</option>
+                    <option value="5">5th Fret</option>
+                    <option value="6">6th Fret</option>
+                    <option value="7">7th Fret</option>
+                    <option value="8">8th Fret</option>
+                    <option value="9">9th Fret</option>
+                    <option value="10">10th Fret</option>
+                    <option value="11">11th Fret</option>
+                    <option value="12">12th Fret (Octave)</option>
+                </select>
+                <button class="primary" onclick="addNoteToPiece()">Add Note</button>
+            </div>
+
+            <table class="note-table">
+                <thead><tr><th>#</th><th>Note</th><th>Action</th></tr></thead>
+                <tbody id="currentPieceNotesBody">
+                    <!-- Notes go here -->
+                </tbody>
+            </table>
+            <div style="margin-top:1rem; text-align:center;">
+                <button onclick="playPiece()" id="playPieceBtn">▶ Play Piece</button>
+                <button onclick="stopPiece()" id="stopPieceBtn" class="danger hidden">■ Stop</button>
+            </div>
+        </div>
+
+        <!-- Library Tab -->
+        <div id="tab-library" class="hidden">
+            <h2>Your Pieces</h2>
+            <ul class="piece-list" id="savedPiecesList">
+                <!-- Saved pieces -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Bottom Section: History & Details -->
+    <div class="card full-width">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('history')">Trash / History</button>
+            <button class="tab-btn" onclick="switchTab('ref')">Note Reference</button>
+        </div>
+
+        <div id="tab-history">
+            <h2>Deleted Pieces (Recoverable)</h2>
+            <p style="font-size:0.9rem; color:#888;">Pieces stay here for 7 days before permanent deletion.</p>
+            <ul class="piece-list" id="trashList">
+                <!-- Trash items -->
+            </ul>
+        </div>
+
+        <div id="tab-ref" class="hidden">
+            <h2>Chromatic Reference</h2>
+            <div class="fretboard-grid" id="chromaticGrid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </div>
 
 </div>
 
-<!-- Results Modal -->
-<div id="resultsModal" class="modal">
-    <div class="modal-content">
-        <h2>Great Job!</h2>
-        <p>You completed the sequence.</p>
-        <p id="accuracyStats">Accuracy: 100%</p>
-        <button onclick="closeModal()">Close & Reset</button>
+<!-- Login Modal -->
+<div id="loginModal" class="modal-overlay">
+    <div class="modal">
+        <h2>Login / Register</h2>
+        <div class="login-form">
+            <input type="text" id="usernameInput" placeholder="Username" class="modal-input">
+            <input type="password" id="passwordInput" placeholder="Password" class="modal-input">
+            <div class="login-error" id="loginError"></div>
+            <button class="primary" onclick="handleLogin()">Log In</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- Configuration ---
+    // --- Data Structures & State ---
     const NOTE_STRINGS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    
     const INSTRUMENTS = {
-        standard: ["E2", "A2", "D3", "G3", "B3", "E4"],
-        bass: ["E1", "A1", "D2", "G2"],
-        violin: ["G3", "D4", "A4", "E5"],
-        cello: ["C2", "G2", "D3", "A3"],
-        ukulele: ["G4", "C4", "E4", "A4"],
-        custom: []
+        violin: { strings: ["G3", "D4", "A4", "E5"], label: "Violin" },
+        guitar: { strings: ["E2", "A2", "D3", "G3", "B3", "E4"], label: "Guitar" },
+        bass: { strings: ["E1", "A1", "D2", "G2"], label: "Bass" },
+        cello: { strings: ["C2", "G2", "D3", "A3"], label: "Cello" },
+        ukulele: { strings: ["G4", "C4", "E4", "A4"], label: "Ukulele" }
     };
 
+    let currentUser = null;
+    let appData = { users: {} }; // Structure: { username: { password: "...", pieces: [], trash: [] } }
+    
+    // Runtime State
     let audioContext = null;
     let analyser = null;
     let mediaStreamSource = null;
     let isListening = false;
     let animationId = null;
-    let currentInstrument = "standard";
+    let currentInstrument = "violin";
+    let isFrettedMode = false;
     
-    // Elements
+    // Piece Editing State
+    let currentPieceNotes = [];
+    let editingPieceId = null;
+    let isPlayingPiece = false;
+    let activeNoteIndex = -1;
+    let pieceInterval = null;
+
+    // DOM Elements
     const needle = document.getElementById('needle');
     const noteDisplay = document.getElementById('noteDisplay');
     const centsDisplay = document.getElementById('centsDisplay');
+    const targetDisplay = document.getElementById('targetDisplay');
     const micBtn = document.getElementById('micBtn');
-    const freqInput = document.getElementById('freqInput');
-    const statusMsg = document.getElementById('statusMsg');
-    const noteInput = document.getElementById('noteInput');
-    const startBtn = document.getElementById('startBtn');
-    const practiceMode = document.getElementById('practiceMode');
-    const targetNoteDisplay = document.getElementById('targetNoteDisplay');
-    const progressBar = document.getElementById('progressBar');
-    const sequenceInfo = document.getElementById('sequenceInfo');
-    const noteListView = document.getElementById('noteListView');
-    const resultsModal = document.getElementById('resultsModal');
-
-    // State Variables for Practice
-    let noteSequence = [];
-    let currentIndex = 0;
-    let mistakes = 0;
-    let totalNotes = 0;
+    const modeBtn = document.getElementById('modeBtn');
+    const instrumentSelect = document.getElementById('instrumentSelect');
+    const pieceNameInput = document.getElementById('pieceNameInput');
+    const currentNotesBody = document.getElementById('currentPieceNotesBody');
+    const savedPiecesList = document.getElementById('savedPiecesList');
+    const trashList = document.getElementById('trashList');
+    const chromaticGrid = document.getElementById('chromaticGrid');
+    const noteStringSelect = document.getElementById('noteStringSelect');
+    const noteFretSelect = document.getElementById('noteFretSelect');
+    const loginModal = document.getElementById('loginModal');
+    const loginError = document.getElementById('loginError');
 
     // --- Initialization ---
-    document.getElementById('instrumentSelect').addEventListener('change', (e) => {
-        currentInstrument = e.target.value;
-        statusMsg.textContent = `Selected: ${currentInstrument.toUpperCase()}`;
-        if(isListening) toggleMic(); 
-    });
+    window.onload = () => {
+        loadData();
+        setupChromaticGrid();
+        updateInstrumentUI();
+        
+        // Check if already logged in via session
+        const sessionUser = sessionStorage.getItem('proStringUser');
+        if(sessionUser && appData.users[sessionUser]) {
+            loginUser(sessionUser);
+        } else {
+            showLoginModal();
+        }
 
-    // Load Saved Pieces on Start
-    loadSavedPiecesUI();
+        instrumentSelect.addEventListener('change', () => {
+            currentInstrument = instrumentSelect.value;
+            updateInstrumentUI();
+            updateStringDropdown();
+            if(isListening) toggleMic(); // Restart mic to apply new calcs if needed
+        });
+    };
 
-    // --- Audio Logic ---
+    function loadData() {
+        const stored = localStorage.getItem('proStringData');
+        if(stored) {
+            appData = JSON.parse(stored);
+        } else {
+            // Default dummy data
+            appData.users = {};
+        }
+    }
 
+    function saveData() {
+        localStorage.setItem('proStringData', JSON.stringify(appData));
+    }
+
+    // --- User Auth ---
+    function showLoginModal() {
+        loginModal.style.display = 'flex';
+        document.getElementById('usernameInput').focus();
+    }
+
+    function closeModal() {
+        loginModal.style.display = 'none';
+        loginError.textContent = '';
+        document.getElementById('usernameInput').value = '';
+        document.getElementById('passwordInput').value = '';
+    }
+
+    function handleLogin() {
+        const u = document.getElementById('usernameInput').value.trim();
+        const p = document.getElementById('passwordInput').value.trim();
+        
+        if(!u || !p) {
+            loginError.textContent = "Please enter both username and password.";
+            return;
+        }
+
+        if(appData.users[u]) {
+            if(appData.users[u].password === p) {
+                loginUser(u);
+            } else {
+                loginError.textContent = "Incorrect password.";
+            }
+        } else {
+            // Auto-register
+            appData.users[u] = {
+                password: p,
+                pieces: [],
+                trash: []
+            };
+            saveData();
+            loginUser(u);
+        }
+    }
+
+    function loginUser(username) {
+        currentUser = username;
+        sessionStorage.setItem('proStringUser', username);
+        loginModal.style.display = 'none';
+        renderUserPanel();
+        renderLibrary();
+        renderTrash();
+        
+        // Load first piece or create empty
+        if(appData.users[username].pieces.length > 0) {
+            loadPieceIntoEditor(appData.users[username].pieces[0].id);
+        } else {
+            startNewPiece();
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        sessionStorage.removeItem('proStringUser');
+        stopPiece();
+        switchTab('editor');
+        showLoginModal();
+    }
+
+    function renderUserPanel() {
+        const panel = document.getElementById('userPanel');
+        panel.innerHTML = `
+            <span>Welcome, <strong>${currentUser}</strong></span>
+            <button onclick="logout()">Logout</button>
+        `;
+    }
+
+    // --- Instrument UI ---
+    function updateInstrumentUI() {
+        const inst = INSTRUMENTS[currentInstrument];
+        targetDisplay.innerText = `Target: ${inst.label} Open Strings (${inst.strings.join(', ')})`;
+        targetDisplay.style.color = isFrettedMode ? 'var(--string-fretted)' : 'var(--string-open)';
+        modeBtn.classList.toggle('fretted-mode', isFrettedMode);
+        updateStringDropdown();
+    }
+
+    function updateStringDropdown() {
+        const inst = INSTRUMENTS[currentInstrument];
+        noteStringSelect.innerHTML = '';
+        inst.strings.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.innerText = s;
+            noteStringSelect.appendChild(opt);
+        });
+    }
+
+    function toggleMode() {
+        isFrettedMode = !isFrettedMode;
+        modeBtn.innerText = isFrettedMode ? "Mode: Fretted" : "Mode: Open Strings";
+        updateInstrumentUI();
+    }
+
+    // --- Tuner Logic ---
     async function toggleMic() {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         if (isListening) {
-            // Stop
             isListening = false;
             micBtn.innerText = "Start Mic";
             micBtn.classList.remove('active');
             cancelAnimationFrame(animationId);
+            noteDisplay.innerText = "--";
+            needle.style.transform = `rotate(0deg)`;
             return;
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, autoGainControl: false } });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { echoCancellation: false, autoGainControl: false } 
+            });
             mediaStreamSource = audioContext.createMediaStreamSource(stream);
             analyser = audioContext.createAnalyser();
             analyser.fftSize = 2048;
@@ -485,37 +632,28 @@
             micBtn.classList.add('active');
             updatePitch();
         } catch (err) {
-            alert("Microphone access denied or error: " + err);
+            alert("Microphone error: " + err);
         }
     }
 
-    // Autocorrelation Pitch Detection Algorithm
     function autoCorrelate(buf, sampleRate) {
         let SIZE = buf.length;
         let rms = 0;
-
-        for (let i = 0; i < SIZE; i++) {
-            let val = buf[i];
-            rms += val * val;
-        }
+        for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
         rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.01) return -1;
 
-        if (rms < 0.01) return -1; 
-
-        let lag = -1;
+        let correlation = 0;
+        // Simple autocorrelation peak detection
         let maxCorr = -Infinity;
+        let lag = -1;
         
-        // Optimized search range
         let startLag = Math.floor(sampleRate / 2000); 
-        let endLag = Math.floor(sampleRate / 50);
-        
-        if(endLag > SIZE/2) endLag = SIZE/2;
+        let endLag = Math.min(Math.floor(sampleRate / 50), SIZE/2);
 
         for (let i = startLag; i < endLag; i++) {
              let c = 0;
-             for(let j=0; j<endLag; j++) {
-                 c += buf[j] * buf[j+i];
-             }
+             for(let j=0; j<endLag; j++) c += buf[j] * buf[j+i];
              if(c > maxCorr) {
                  maxCorr = c;
                  lag = i;
@@ -524,16 +662,15 @@
 
         if (lag === -1) return -1;
 
+        // Refine
         let x1 = lag - 1, x2 = lag, x3 = lag + 1;
         let y1 = getCorr(x1), y2 = getCorr(x2), y3 = getCorr(x3);
-        
         function getCorr(l) {
             if(l < 0 || l >= SIZE/2) return 0;
             let sum = 0;
             for(let j=0; j<SIZE-l; j++) sum += buf[j]*buf[j+l];
             return sum;
         }
-
         let shift = (2 * y2 - y1 - y3) / (2 * (y1 + y3) - 4 * y2);
         let period = lag + shift;
         return sampleRate / period;
@@ -544,219 +681,405 @@
 
         let buf = new Float32Array(analyser.fftSize);
         analyser.getFloatTimeDomainData(buf);
-        
         let freq = autoCorrelate(buf, audioContext.sampleRate);
 
         if (freq !== -1) {
             let noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
-            let note = Math.round(noteNum);
-            let detune = 1200 * Math.log(freq / (440 * Math.pow(2, (note - 69) / 12))) / Math.log(2);
+            let noteIdx = Math.round(noteNum);
+            let detune = 1200 * Math.log(freq / (440 * Math.pow(2, (noteIdx - 69) / 12))) / Math.log(2);
 
-            // Update UI
-            let noteName = NOTE_STRINGS[note % 12];
+            let noteName = NOTE_STRINGS[noteIdx % 12];
             noteDisplay.innerText = noteName;
             
-            // Clamp detune for visual (-50 to 50 cents)
+            // Clamp and Rotate
             let clampedDetune = Math.max(-50, Math.min(50, detune));
-            let rotation = (clampedDetune / 50) * 45; 
-            
+            let rotation = (clampedDetune / 50) * 45;
             needle.style.transform = `rotate(${rotation}deg)`;
             
-            // Color logic
-            if(Math.abs(detune) < 10) {
-                noteDisplay.style.color = "#4caf50"; 
+            // Color & Feedback Logic
+            let isInTune = Math.abs(detune) < 5;
+            let isTargetNote = checkIfMatchesCurrentTarget(noteName, detune);
+
+            if(isInTune) {
+                noteDisplay.style.color = "#4caf50";
                 centsDisplay.innerText = "In Tune";
-                
-                // Check against sequence
-                checkSequenceMatch(noteName);
+                if(isPlayingPiece && activeNoteIndex >= 0) {
+                     markNotePlayed(activeNoteIndex, true);
+                }
             } else {
-                noteDisplay.style.color = "#cf6679"; 
+                noteDisplay.style.color = "#cf6679";
                 centsDisplay.innerText = (detune > 0 ? "+" : "") + Math.round(detune) + " cents";
+                if(isPlayingPiece && activeNoteIndex >= 0) {
+                     markNotePlayed(activeNoteIndex, false, Math.round(detune));
+                }
             }
         }
 
         animationId = requestAnimationFrame(updatePitch);
     }
 
-    // --- Practice Logic ---
-
-    function parseNotes(text) {
-        // Split by space, comma, newline. Remove empty strings.
-        return text.split(/[\s,]+/).filter(n => n.length > 0);
-    }
-
-    function startPractice() {
-        const rawText = noteInput.value;
-        if(!rawText.trim()) {
-            alert("Please enter some notes first.");
-            return;
-        }
-
-        noteSequence = parseNotes(rawText);
-        if(noteSequence.length === 0) return;
-
-        currentIndex = 0;
-        mistakes = 0;
-        totalNotes = noteSequence.length;
+    function checkIfMatchesCurrentTarget(noteName, detune) {
+        if(!isPlayingPiece || activeNoteIndex < 0) return false;
+        const target = currentPieceNotes[activeNoteIndex];
+        if(!target) return false;
         
-        // Setup UI
-        startBtn.disabled = true;
-        noteInput.disabled = true;
-        practiceMode.style.display = 'block';
-        renderNoteList();
-        updateTargetDisplay();
+        // Compare Note Names (ignoring octave for simplicity in basic matching, 
+        // though advanced would compare frequencies)
+        const targetNoteName = NOTE_STRINGS[target.fret % 12]; // Basic mapping from string+pitch
         
-        statusMsg.textContent = "Playing... Keep your microphone active.";
+        // Actually, let's store the MIDI note or frequency in the piece for accuracy
+        // For now, we just check if the detected note matches the intended note name
+        return noteName === target.noteName;
     }
-
-    function renderNoteList() {
-        noteListView.innerHTML = '';
-        noteSequence.forEach((note, index) => {
-            const div = document.createElement('div');
-            div.className = 'mini-note';
-            div.innerText = note;
-            div.id = `seq-${index}`;
-            noteListView.appendChild(div);
-        });
-    }
-
-    function updateTargetDisplay() {
-        if(currentIndex < totalNotes) {
-            targetNoteDisplay.innerText = noteSequence[currentIndex];
-            sequenceInfo.innerText = `Sequence: ${currentIndex + 1}/${totalNotes}`;
-            
-            // Update progress bar
-            const pct = (currentIndex / totalNotes) * 100;
-            progressBar.style.width = `${pct}%`;
-
-            // Highlight active note in list
-            document.querySelectorAll('.mini-note').forEach(el => el.classList.remove('active'));
-            const activeEl = document.getElementById(`seq-${currentIndex}`);
-            if(activeEl) activeEl.classList.add('active');
-        } else {
-            finishPractice();
-        }
-    }
-
-    function checkSequenceMatch(detectedNote) {
-        if(currentIndex >= totalNotes) return;
-
-        const expectedNote = noteSequence[currentIndex].toUpperCase();
-        
-        if(detectedNote.toUpperCase() === expectedNote) {
-            // Correct!
-            const currentEl = document.getElementById(`seq-${currentIndex}`);
-            if(currentEl) {
-                currentEl.classList.remove('active');
-                currentEl.classList.add('done');
-            }
-            
-            currentIndex++;
-            updateTargetDisplay();
-        } else {
-            // Wrong note detected (optional: could add visual feedback for wrong note)
-        }
-    }
-
-    function finishPractice() {
-        stopPractice();
-        const accuracy = Math.round(((totalNotes - mistakes) / totalNotes) * 100);
-        document.getElementById('accuracyStats').innerText = `Accuracy: ~${accuracy}% (based on flow)`;
-        resultsModal.style.display = 'flex';
-    }
-
-    function closeModal() {
-        resultsModal.style.display = 'none';
-        resetPractice();
-    }
-
-    function stopPractice() {
-        // Just pause logic visually, keep mic running if user wants to continue tuning
-        // But usually we stop the sequence logic
-        statusMsg.textContent = "Finished.";
-    }
-
-    function resetPractice() {
-        practiceMode.style.display = 'none';
-        startBtn.disabled = false;
-        noteInput.disabled = false;
-        targetNoteDisplay.innerText = "--";
-        progressBar.style.width = "0%";
-        sequenceInfo.innerText = "";
-    }
-
-    // --- Helper Functions ---
 
     function playReference() {
-        const freq = parseFloat(freqInput.value);
+        const freq = parseFloat(document.getElementById('freqInput').value);
         if(!freq) return;
         playTone(freq);
+    }
+
+    function playReferenceNote(noteName) {
+        // Find closest frequency in standard tuning context? 
+        // Just play middle C range note
+        let midi = NOTE_STRINGS.indexOf(noteName) + 60; 
+        let targetFreq = 440 * Math.pow(2, (midi - 69) / 12);
+        playTone(targetFreq);
     }
 
     function playTone(freq) {
         const osc = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-        
         gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
-        
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
         osc.start();
         osc.stop(audioContext.currentTime + 1);
     }
 
-    // --- Local Storage Logic ---
+    // --- Piece Management ---
+
+    function startNewPiece() {
+        editingPieceId = null;
+        currentPieceNotes = [];
+        pieceNameInput.value = "";
+        renderCurrentNotes();
+    }
 
     function saveCurrentPiece() {
-        const text = noteInput.value;
-        if(!text.trim()) return;
-
-        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
+        if(!currentUser) return;
+        const name = pieceNameInput.value.trim() || `Untitled ${Date.now()}`;
         
-        // Add to beginning, remove duplicates, limit to 5
-        const existingIndex = saved.findIndex(p => p.text === text);
-        if(existingIndex > -1) saved.splice(existingIndex, 1);
-        
-        saved.unshift({
-            name: `Piece ${saved.length + 1}`,
-            text: text,
-            date: new Date().toLocaleDateString()
+        // Calculate target frequencies for each note for accurate feedback
+        const enrichedNotes = currentPieceNotes.map(n => {
+            const baseFreq = stringToFreq(n.string);
+            const semitones = parseInt(n.fret);
+            const freq = baseFreq * Math.pow(2, semitones / 12);
+            const midi = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
+            return {
+                ...n,
+                freq: freq,
+                midi: Math.round(midi),
+                noteName: NOTE_STRINGS[Math.round(midi) % 12]
+            };
         });
 
-        if(saved.length > 5) saved.pop();
+        const pieceData = {
+            id: editingPieceId || Date.now().toString(),
+            name: name,
+            notes: enrichedNotes,
+            createdAt: Date.now()
+        };
 
-        localStorage.setItem('omnituner_pieces', JSON.stringify(saved));
-        loadSavedPiecesUI();
-        statusMsg.textContent = "Piece saved!";
-    }
-
-    function loadSavedPiecesUI() {
-        const container = document.getElementById('savedListContainer');
-        container.innerHTML = '';
+        const user = appData.users[currentUser];
         
-        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
-        
-        saved.forEach((item, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'save-btn';
-            btn.innerText = item.name;
-            btn.onclick = () => loadPiece(index);
-            container.appendChild(btn);
-        });
-    }
-
-    function loadPiece(index) {
-        const saved = JSON.parse(localStorage.getItem('omnituner_pieces') || '[]');
-        if(saved[index]) {
-            noteInput.value = saved[index].text;
-            statusMsg.textContent = `Loaded: ${saved[index].name}`;
-            // Auto-start if desired, but better to let user click start
+        if(editingPieceId) {
+            // Update existing
+            const idx = user.pieces.findIndex(p => p.id === editingPieceId);
+            if(idx > -1) user.pieces[idx] = pieceData;
+            // Also remove from trash if it was there
+            user.trash = user.trash.filter(t => t.id !== editingPieceId);
+        } else {
+            // Add new
+            user.pieces.push(pieceData);
         }
+
+        saveData();
+        renderLibrary();
+        renderTrash();
+        editingPieceId = pieceData.id;
+        alert("Piece Saved!");
+    }
+
+    function loadPieceIntoEditor(id) {
+        const user = appData.users[currentUser];
+        const piece = user.pieces.find(p => p.id === id);
+        if(piece) {
+            editingPieceId = piece.id;
+            pieceNameInput.value = piece.name;
+            currentPieceNotes = piece.notes;
+            renderCurrentNotes();
+            switchTab('editor');
+        }
+    }
+
+    function deletePiece(id) {
+        const user = appData.users[currentUser];
+        const idx = user.pieces.findIndex(p => p.id === id);
+        if(idx > -1) {
+            const piece = user.pieces.splice(idx, 1)[0];
+            piece.deletedAt = Date.now();
+            user.trash.unshift(piece); // Add to front of trash
+            saveData();
+            renderLibrary();
+            renderTrash();
+            if(editingPieceId === id) startNewPiece();
+        }
+    }
+
+    function restorePiece(id) {
+        const user = appData.users[currentUser];
+        const idx = user.trash.findIndex(p => p.id === id);
+        if(idx > -1) {
+            const piece = user.trash.splice(idx, 1)[0];
+            delete piece.deletedAt;
+            user.pieces.push(piece);
+            saveData();
+            renderLibrary();
+            renderTrash();
+        }
+    }
+
+    function permanentlyDelete(id) {
+        const user = appData.users[currentUser];
+        user.trash = user.trash.filter(p => p.id !== id);
+        saveData();
+        renderTrash();
+    }
+
+    function renderLibrary() {
+        if(!currentUser) return;
+        const user = appData.users[currentUser];
+        savedPiecesList.innerHTML = '';
+        user.pieces.forEach(p => {
+            const li = document.createElement('li');
+            li.className = `piece-item ${editingPieceId === p.id ? 'active' : ''}`;
+            li.innerHTML = `
+                <span onclick="loadPieceIntoEditor('${p.id}')">${p.name}</span>
+                <div class="piece-actions">
+                    <button onclick="loadPieceIntoEditor('${p.id}')">Edit</button>
+                    <button class="danger" onclick="deletePiece('${p.id}')">Del</button>
+                </div>
+            `;
+            savedPiecesList.appendChild(li);
+        });
+    }
+
+    function renderTrash() {
+        if(!currentUser) return;
+        const user = appData.users[currentUser];
+        trashList.innerHTML = '';
+        user.trash.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'piece-item';
+            const date = new Date(p.deletedAt).toLocaleDateString();
+            li.innerHTML = `
+                <div>
+                    <strong>${p.name}</strong> <small style="color:#666">(${date})</small>
+                </div>
+                <div class="piece-actions">
+                    <button onclick="restorePiece('${p.id}')">Restore</button>
+                    <button class="danger" onclick="permanentlyDelete('${p.id}')">X</button>
+                </div>
+            `;
+            trashList.appendChild(li);
+        });
+    }
+
+    // --- Note Editor Logic ---
+
+    function addNoteToPiece() {
+        const str = noteStringSelect.value;
+        const fret = noteFretSelect.value;
+        
+        // Calculate Note Name
+        const baseMidi = stringToMidi(str);
+        const finalMidi = baseMidi + parseInt(fret);
+        const noteName = NOTE_STRINGS[finalMidi % 12];
+
+        currentPieceNotes.push({
+            string: str,
+            fret: fret,
+            noteName: noteName,
+            midi: finalMidi
+        });
+
+        renderCurrentNotes();
+    }
+
+    function removeNoteFromPiece(index) {
+        currentPieceNotes.splice(index, 1);
+        renderCurrentNotes();
+    }
+
+    function renderCurrentNotes() {
+        currentNotesBody.innerHTML = '';
+        currentPieceNotes.forEach((n, i) => {
+            const tr = document.createElement('tr');
+            tr.className = `note-row ${i === activeNoteIndex ? 'active' : ''}`;
+            tr.id = `row-${i}`;
+            tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${n.noteName} <small>(${n.string} ${n.fret === '0' ? 'Open' : n.fret + 'th'})</small></td>
+                <td>
+                    <button class="danger" style="padding:2px 5px;" onclick="removeNoteFromPiece(${i})">×</button>
+                </td>
+                <td class="feedback-cell" id="fb-${i}"></td>
+            `;
+            currentNotesBody.appendChild(tr);
+        });
+    }
+
+    function stringToMidi(str) {
+        // Simplified mapping based on standard tunings
+        const map = {
+            'E2': 40, 'A2': 45, 'D3': 50, 'G3': 55, 'B3': 59, 'E4': 64,
+            'E1': 28, 'A1': 33, 'D2': 38, 'G2': 43,
+            'G3_v': 55, 'D4_v': 62, 'A4_v': 69, 'E5_v': 76, // Violin
+            'G4_u': 67, 'C4_u': 48, 'E4_u': 64, 'A4_u': 69
+        };
+        
+        // Handle specific instrument mappings if needed, otherwise generic
+        // For this demo, we assume the string labels match the SELECT options exactly
+        // Let's hardcode common ones based on the SELECT values
+        switch(str) {
+            case 'E2': return 40; case 'A2': return 45; case 'D3': return 50; 
+            case 'G3': return 55; case 'B3': return 59; case 'E4': return 64;
+            case 'E1': return 28; case 'A1': return 33; case 'D2': return 38; 
+            case 'G2': return 43;
+            case 'G3': return 55; case 'D4': return 62; case 'A4': return 69; case 'E5': return 76;
+            case 'G4': return 67; case 'C4': return 48; case 'E4': return 64; case 'A4': return 69;
+            default: return 60; // Default C4
+        }
+    }
+
+    function stringToFreq(str) {
+        return 440 * Math.pow(2, (stringToMidi(str) - 69) / 12);
+    }
+
+    // --- Playback & Feedback Loop ---
+
+    function playPiece() {
+        if(currentPieceNotes.length === 0) return;
+        
+        stopPiece(); // Reset first
+        isPlayingPiece = true;
+        activeNoteIndex = 0;
+        
+        document.getElementById('playPieceBtn').classList.add('hidden');
+        document.getElementById('stopPieceBtn').classList.remove('hidden');
+        
+        // Ensure Mic is on for feedback
+        if(!isListening) toggleMic();
+
+        processNextNote();
+    }
+
+    function stopPiece() {
+        isPlayingPiece = false;
+        activeNoteIndex = -1;
+        clearTimeout(pieceInterval);
+        document.getElementById('playPieceBtn').classList.remove('hidden');
+        document.getElementById('stopPieceBtn').classList.add('hidden');
+        
+        // Reset visuals
+        document.querySelectorAll('.note-row').forEach(el => {
+            el.classList.remove('active', 'played');
+            const fb = el.querySelector('.feedback-cell');
+            if(fb) fb.innerHTML = '';
+        });
+        noteDisplay.innerText = "--";
+        needle.style.transform = `rotate(0deg)`;
+    }
+
+    function processNextNote() {
+        if(!isPlayingPiece) return;
+        
+        // Clear previous active
+        if(activeNoteIndex >= 0) {
+            const prevRow = document.getElementById(`row-${activeNoteIndex}`);
+            if(prevRow) prevRow.classList.remove('active');
+        }
+
+        activeNoteIndex++;
+        
+        if(activeNoteIndex >= currentPieceNotes.length) {
+            finishPiece();
+            return;
+        }
+
+        // Set active
+        const currRow = document.getElementById(`row-${activeNoteIndex}`);
+        if(currRow) {
+            currRow.classList.add('active');
+            currRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Play reference tone for this note
+        const note = currentPieceNotes[activeNoteIndex];
+        const freq = 440 * Math.pow(2, (note.midi - 69) / 12);
+        playTone(freq);
+
+        // Schedule next
+        pieceInterval = setTimeout(processNextNote, 2000); // 2 seconds per note
+    }
+
+    function markNotePlayed(index, success, detuneVal) {
+        const row = document.getElementById(`row-${index}`);
+        if(!row || row.classList.contains('played')) return;
+
+        row.classList.add('played');
+        const fbCell = row.querySelector('.feedback-cell');
+        
+        if(success) {
+            fbCell.innerHTML = '<span class="fb-ok">✓ Perfect</span>';
+        } else {
+            const dir = detuneVal > 0 ? "Sharp ↑" : "Flat ↓";
+            fbCell.innerHTML = `<span class="fb-warn">${Math.abs(detuneVal)}c ${dir}</span>`;
+        }
+    }
+
+    function finishPiece() {
+        setTimeout(() => {
+            stopPiece();
+            alert("Piece Finished! Great job.");
+        }, 1000);
+    }
+
+    // --- Utilities ---
+
+    function switchTab(tabName) {
+        ['editor', 'library', 'history', 'ref'].forEach(t => {
+            const el = document.getElementById(`tab-${t}`);
+            if(el) el.classList.add('hidden');
+        });
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function setupChromaticGrid() {
+        NOTE_STRINGS.forEach(note => {
+            const btn = document.createElement('div');
+            btn.className = 'note-btn';
+            btn.innerText = note;
+            btn.onclick = () => playReferenceNote(note);
+            chromaticGrid.appendChild(btn);
+        });
     }
 
 </script>
