@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProString Coach v2</title>
+    <title>ProString Coach v3 - Tabbed</title>
     <style>
         :root {
             --bg: #121212;
@@ -21,6 +21,18 @@
             --highlight: #ffd700;
             --border: #333;
             --radius: 12px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Light Mode Overrides */
+        body.light-mode {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-hover: #eeeeee;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #dddddd;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         body {
@@ -32,44 +44,65 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
+        /* Header & Nav */
         header {
-            text-align: center;
-            padding: 1rem;
             width: 100%;
+            padding: 1rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             max-width: 900px;
+            box-sizing: border-box;
         }
 
         h1 { margin: 0; font-weight: 300; letter-spacing: 1px; font-size: 1.5rem; }
         
-        .user-controls {
+        .header-controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
-            font-size: 0.9rem;
         }
 
-        button {
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 6px;
+        .theme-toggle {
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            color: var(--text);
         }
 
-        button:hover { background: var(--surface-hover); border-color: var(--primary); }
-        button.primary { background: var(--primary); color: #000; font-weight: bold; border: none; }
-        button.danger { border-color: var(--error); color: var(--error); }
-        button.danger:hover { background: var(--error); color: white; }
-        button.small { padding: 4px 8px; font-size: 0.8rem; }
+        /* Main Navigation Tabs */
+        .main-nav {
+            display: flex;
+            gap: 5px;
+            background: var(--surface);
+            padding: 5px;
+            border-radius: var(--radius);
+            margin-top: 1rem;
+            width: 90%;
+            max-width: 900px;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover { background: var(--surface-hover); color: var(--text); }
+        .nav-btn.active { background: var(--primary); color: #000; font-weight: bold; }
 
         /* Container */
         .container {
@@ -92,14 +125,14 @@
             background: var(--surface);
             border-radius: var(--radius);
             padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow);
             border: 1px solid var(--border);
         }
 
         h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
         h3 { margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-muted); }
 
-        /* Tuner */
+        /* Tuner Specifics */
         .tuner-display {
             position: relative;
             height: 180px;
@@ -166,17 +199,45 @@
             color: var(--text-muted);
         }
 
-        /* String Indicator */
-        .target-indicator {
-            text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-            background: #252525;
-            color: var(--string-open);
-            font-weight: bold;
+        /* Instrument Visual Strings */
+        .instrument-visual {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
             margin-bottom: 1rem;
-            border: 1px solid var(--border);
         }
+        .inst-string {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-weight: bold;
+        }
+        .inst-string:hover { border-color: var(--primary); }
+        .inst-string.active { background: var(--primary); color: #000; }
+
+        /* Buttons */
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        button:hover { background: var(--surface-hover); border-color: var(--primary); }
+        button.primary { background: var(--primary); color: #000; font-weight: bold; border: none; }
+        button.danger { border-color: var(--error); color: var(--error); }
+        button.danger:hover { background: var(--error); color: white; }
+        button.small { padding: 4px 8px; font-size: 0.8rem; }
 
         /* Piece List */
         .piece-list {
@@ -198,9 +259,10 @@
             cursor: pointer;
             border-left: 4px solid transparent;
         }
+        body.light-mode .piece-item { background: #f0f0f0; }
 
-        .piece-item:hover { background: #333; }
-        .piece-item.active { border-left-color: var(--highlight); background: #333; }
+        .piece-item:hover { background: var(--surface-hover); }
+        .piece-item.active { border-left-color: var(--highlight); background: var(--surface-hover); }
 
         .piece-actions { display: flex; gap: 5px; }
         .piece-actions button { padding: 4px 8px; font-size: 0.8rem; }
@@ -216,10 +278,14 @@
         input, select {
             background: #333;
             border: 1px solid var(--border);
-            color: white;
+            color: var(--text);
             padding: 8px;
             border-radius: 4px;
             flex-grow: 1;
+        }
+        body.light-mode input, body.light-mode select {
+            background: #fff;
+            border-color: #ccc;
         }
 
         .note-table {
@@ -231,7 +297,7 @@
         .note-table th, .note-table td {
             padding: 8px;
             text-align: left;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border);
         }
 
         .note-row { transition: background 0.2s; }
@@ -267,17 +333,6 @@
         .modal h2 { margin-top: 0; }
         .modal-input { width: 100%; margin-bottom: 1rem; box-sizing: border-box; }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
-        .tab-btn { flex: 1; text-align: center; background: #252525; }
-        .tab-btn.active { background: var(--primary); color: #000; }
-
-        .hidden { display: none !important; }
-
-        /* Login Form */
-        .login-form { display: flex; flex-direction: column; gap: 10px; }
-        .login-error { color: var(--error); font-size: 0.8rem; min-height: 1.2em; }
-
         /* Metronome Visual */
         .metronome-dot {
             width: 20px;
@@ -292,43 +347,65 @@
             box-shadow: 0 0 15px var(--highlight);
         }
 
-        /* Instrument Strings Visual */
-        .instrument-visual {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 1rem;
-        }
-        .inst-string {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px solid transparent;
+        /* Target Indicator */
+        .target-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: #252525;
+            color: var(--string-open);
             font-weight: bold;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
         }
-        .inst-string:hover { border-color: var(--primary); }
-        .inst-string.active { background: var(--primary); color: #000; }
+
+        /* Tabs inside cards */
+        .tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .tab-btn { flex: 1; text-align: center; background: #252525; }
+        .tab-btn.active { background: var(--primary); color: #000; }
+
+        .hidden { display: none !important; }
+
+        /* Login Form */
+        .login-form { display: flex; flex-direction: column; gap: 10px; }
+        .login-error { color: var(--error); font-size: 0.8rem; min-height: 1.2em; }
+
+        /* Fretboard Visualization */
+        .mini-fretboard {
+            display: flex;
+            gap: 2px;
+            margin-top: 5px;
+        }
+        .fret-segment {
+            width: 20px;
+            height: 4px;
+            background: #555;
+        }
+        .fret-segment.filled { background: var(--secondary); }
 
     </style>
 </head>
 <body>
 
 <header>
-    <h1>ProString Coach v2</h1>
-    <div class="user-controls" id="userPanel">
-        <!-- Injected by JS -->
+    <h1>ProString Coach v3</h1>
+    <div class="header-controls">
+        <button id="userBtn" onclick="showLoginModal()">Login</button>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
     </div>
 </header>
 
+<!-- Main Navigation Tabs -->
+<div class="main-nav">
+    <button class="nav-btn active" onclick="switchMainTab('tuner')">🎵 Tuner</button>
+    <button class="nav-btn" onclick="switchMainTab('practice')">📝 Practice</button>
+    <button class="nav-btn" onclick="switchMainTab('library')">📚 Library</button>
+</div>
+
 <div class="container">
     
-    <!-- Left Column: Tuner & Input -->
-    <div class="card full-width" style="grid-column: span 1;">
+    <!-- TUNER TAB -->
+    <div id="tab-tuner" class="card full-width">
         <div class="controls" style="display:flex; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
             <select id="instrumentSelect">
                 <option value="violin">Violin (G D A E)</option>
@@ -368,15 +445,15 @@
         </div>
     </div>
 
-    <!-- Right Column: Piece Manager -->
-    <div class="card">
+    <!-- PRACTICE TAB -->
+    <div id="tab-practice" class="card hidden">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('editor')">Editor</button>
-            <button class="tab-btn" onclick="switchTab('library')">Library</button>
+            <button class="tab-btn active" onclick="switchSubTab('editor', 'tab-practice')">Editor</button>
+            <button class="tab-btn" onclick="switchSubTab('ref', 'tab-practice')">Reference</button>
         </div>
 
-        <!-- Editor Tab -->
-        <div id="tab-editor">
+        <!-- Editor Sub-Tab -->
+        <div id="sub-editor" class="tab-content">
             <h2>Edit Piece</h2>
             <div style="margin-bottom:1rem;">
                 <input type="text" id="pieceNameInput" placeholder="Piece Name (e.g., Minuet in G)">
@@ -409,7 +486,7 @@
             </div>
 
             <table class="note-table">
-                <thead><tr><th>#</th><th>Note</th><th>Action</th></tr></thead>
+                <thead><tr><th>#</th><th>Note</th><th>Mini-Fret</th><th>Action</th></tr></thead>
                 <tbody id="currentPieceNotesBody">
                     <!-- Notes go here -->
                 </tbody>
@@ -421,35 +498,34 @@
             </div>
         </div>
 
-        <!-- Library Tab -->
-        <div id="tab-library" class="hidden">
-            <h2>Your Pieces</h2>
+        <!-- Reference Sub-Tab -->
+        <div id="sub-ref" class="tab-content hidden">
+            <h2>Chromatic Reference</h2>
+            <div class="fretboard-grid" id="chromaticGrid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- LIBRARY TAB -->
+    <div id="tab-library" class="card full-width">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchSubTab('my-pieces', 'tab-library')">My Pieces</button>
+            <button class="tab-btn" onclick="switchSubTab('trash', 'tab-library')">Trash / History</button>
+        </div>
+
+        <div id="sub-my-pieces" class="tab-content">
             <ul class="piece-list" id="savedPiecesList">
                 <!-- Saved pieces -->
             </ul>
         </div>
-    </div>
 
-    <!-- Bottom Section: History & Details -->
-    <div class="card full-width">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('history')">Trash / History</button>
-            <button class="tab-btn" onclick="switchTab('ref')">Note Reference</button>
-        </div>
-
-        <div id="tab-history">
+        <div id="sub-trash" class="tab-content hidden">
             <h2>Deleted Pieces (Recoverable)</h2>
             <p style="font-size:0.9rem; color:#888;">Pieces stay here for 7 days before permanent deletion.</p>
             <ul class="piece-list" id="trashList">
                 <!-- Trash items -->
             </ul>
-        </div>
-
-        <div id="tab-ref" class="hidden">
-            <h2>Chromatic Reference</h2>
-            <div class="fretboard-grid" id="chromaticGrid">
-                <!-- Generated by JS -->
-            </div>
         </div>
     </div>
 
@@ -537,7 +613,7 @@
         instrumentSelect.addEventListener('change', () => {
             currentInstrument = instrumentSelect.value;
             updateInstrumentUI();
-            if(isListening) toggleMic(); // Restart mic to apply new calcs if needed
+            if(isListening) toggleMic(); 
         });
     };
 
@@ -546,7 +622,6 @@
         if(stored) {
             appData = JSON.parse(stored);
         } else {
-            // Default dummy data
             appData.users = {};
         }
     }
@@ -584,7 +659,6 @@
                 loginError.textContent = "Incorrect password.";
             }
         } else {
-            // Auto-register
             appData.users[u] = {
                 password: p,
                 pieces: [],
@@ -603,7 +677,6 @@
         renderLibrary();
         renderTrash();
         
-        // Load first piece or create empty
         if(appData.users[username].pieces.length > 0) {
             loadPieceIntoEditor(appData.users[username].pieces[0].id);
         } else {
@@ -615,16 +688,43 @@
         currentUser = null;
         sessionStorage.removeItem('proStringUser');
         stopPiece();
-        switchTab('editor');
+        switchMainTab('tuner');
         showLoginModal();
     }
 
     function renderUserPanel() {
-        const panel = document.getElementById('userPanel');
-        panel.innerHTML = `
-            <span>Welcome, <strong>${currentUser}</strong></span>
-            <button onclick="logout()">Logout</button>
-        `;
+        const panel = document.getElementById('userBtn');
+        panel.innerText = currentUser ? `Logout (${currentUser})` : 'Login';
+        panel.onclick = () => {
+            if(currentUser) logout();
+            else showLoginModal();
+        };
+    }
+
+    // --- Theme Toggle ---
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+    }
+
+    // --- Navigation ---
+    function switchMainTab(tabName) {
+        ['tuner', 'practice', 'library'].forEach(t => {
+            const el = document.getElementById(`tab-${t}`);
+            if(el) el.classList.add('hidden');
+        });
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+        document.querySelectorAll('.main-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function switchSubTab(subTabName, parentTabId) {
+        const parentTab = document.getElementById(parentTabId);
+        parentTab.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`sub-${subTabName}`).classList.remove('hidden');
+
+        parentTab.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
     }
 
     // --- Instrument UI ---
@@ -632,7 +732,6 @@
         const inst = INSTRUMENTS[currentInstrument];
         targetDisplay.innerText = `Target: ${inst.label} Open Strings (${inst.strings.join(', ')})`;
         targetDisplay.style.color = isFrettedMode ? 'var(--string-fretted)' : 'var(--string-open)';
-        modeBtn.classList.toggle('fretted-mode', isFrettedMode);
         updateStringDropdown();
         renderInstrumentStrings();
     }
@@ -654,7 +753,7 @@
         inst.strings.forEach(s => {
             const div = document.createElement('div');
             div.className = 'inst-string';
-            div.innerText = s.charAt(0); // Just the letter
+            div.innerText = s.charAt(0);
             div.title = s;
             div.onclick = () => playReferenceNote(s);
             instStringsContainer.appendChild(div);
@@ -708,8 +807,6 @@
         rms = Math.sqrt(rms / SIZE);
         if (rms < 0.01) return -1;
 
-        let correlation = 0;
-        // Simple autocorrelation peak detection
         let maxCorr = -Infinity;
         let lag = -1;
         
@@ -727,7 +824,6 @@
 
         if (lag === -1) return -1;
 
-        // Refine
         let x1 = lag - 1, x2 = lag, x3 = lag + 1;
         let y1 = getCorr(x1), y2 = getCorr(x2), y3 = getCorr(x3);
         function getCorr(l) {
@@ -756,12 +852,10 @@
             let noteName = NOTE_STRINGS[noteIdx % 12];
             noteDisplay.innerText = noteName;
             
-            // Clamp and Rotate
             let clampedDetune = Math.max(-50, Math.min(50, detune));
             let rotation = (clampedDetune / 50) * 45;
             needle.style.transform = `rotate(${rotation}deg)`;
             
-            // Color & Feedback Logic
             let tolerance = parseInt(document.getElementById('toleranceRange').value);
             let isInTune = Math.abs(detune) < tolerance;
             let isTargetNote = checkIfMatchesCurrentTarget(noteName, detune);
@@ -788,13 +882,6 @@
         if(!isPlayingPiece || activeNoteIndex < 0) return false;
         const target = currentPieceNotes[activeNoteIndex];
         if(!target) return false;
-        
-        // Compare Note Names (ignoring octave for simplicity in basic matching, 
-        // though advanced would compare frequencies)
-        const targetNoteName = NOTE_STRINGS[target.fret % 12]; // Basic mapping from string+pitch
-        
-        // Actually, let's store the MIDI note or frequency in the piece for accuracy
-        // For now, we just check if the detected note matches the intended note name
         return noteName === target.noteName;
     }
 
@@ -805,8 +892,6 @@
     }
 
     function playReferenceNote(stringLabel) {
-        // Find closest frequency in standard tuning context? 
-        // Just play middle C range note
         let midi = stringToMidi(stringLabel);
         let targetFreq = 440 * Math.pow(2, (midi - 69) / 12);
         playTone(targetFreq);
@@ -838,7 +923,6 @@
         if(!currentUser) return;
         const name = pieceNameInput.value.trim() || `Untitled ${Date.now()}`;
         
-        // Calculate target frequencies for each note for accurate feedback
         const enrichedNotes = currentPieceNotes.map(n => {
             const baseFreq = stringToFreq(n.string);
             const semitones = parseInt(n.fret);
@@ -862,13 +946,10 @@
         const user = appData.users[currentUser];
         
         if(editingPieceId) {
-            // Update existing
             const idx = user.pieces.findIndex(p => p.id === editingPieceId);
             if(idx > -1) user.pieces[idx] = pieceData;
-            // Also remove from trash if it was there
             user.trash = user.trash.filter(t => t.id !== editingPieceId);
         } else {
-            // Add new
             user.pieces.push(pieceData);
         }
 
@@ -887,7 +968,8 @@
             pieceNameInput.value = piece.name;
             currentPieceNotes = piece.notes;
             renderCurrentNotes();
-            switchTab('editor');
+            switchMainTab('practice');
+            switchSubTab('editor', 'tab-practice');
         }
     }
 
@@ -897,7 +979,7 @@
         if(idx > -1) {
             const piece = user.pieces.splice(idx, 1)[0];
             piece.deletedAt = Date.now();
-            user.trash.unshift(piece); // Add to front of trash
+            user.trash.unshift(piece);
             saveData();
             renderLibrary();
             renderTrash();
@@ -970,7 +1052,6 @@
         const str = noteStringSelect.value;
         const fret = noteFretSelect.value;
         
-        // Calculate Note Name
         const baseMidi = stringToMidi(str);
         const finalMidi = baseMidi + parseInt(fret);
         const noteName = NOTE_STRINGS[finalMidi % 12];
@@ -1010,9 +1091,18 @@
             const tr = document.createElement('tr');
             tr.className = `note-row ${i === activeNoteIndex ? 'active' : ''}`;
             tr.id = `row-${i}`;
+            
+            // Mini Fretboard
+            let fretboardHtml = '<div class="mini-fretboard">';
+            for(let f=0; f<=12; f++) {
+                fretboardHtml += `<div class="fret-segment ${f <= n.fret ? 'filled' : ''}"></div>`;
+            }
+            fretboardHtml += '</div>';
+
             tr.innerHTML = `
                 <td>${i + 1}</td>
                 <td>${n.noteName} <small>(${n.string} ${n.fret === '0' ? 'Open' : n.fret + 'th'})</small></td>
+                <td>${fretboardHtml}</td>
                 <td>
                     <button class="danger small" style="padding:2px 5px;" onclick="removeNoteFromPiece(${i})">×</button>
                 </td>
@@ -1023,17 +1113,13 @@
     }
 
     function stringToMidi(str) {
-        // Simplified mapping based on standard tunings
         const map = {
             'E2': 40, 'A2': 45, 'D3': 50, 'G3': 55, 'B3': 59, 'E4': 64,
             'E1': 28, 'A1': 33, 'D2': 38, 'G2': 43,
-            'G3_v': 55, 'D4_v': 62, 'A4_v': 69, 'E5_v': 76, // Violin
+            'G3_v': 55, 'D4_v': 62, 'A4_v': 69, 'E5_v': 76,
             'G4_u': 67, 'C4_u': 48, 'E4_u': 64, 'A4_u': 69
         };
         
-        // Handle specific instrument mappings if needed, otherwise generic
-        // For this demo, we assume the string labels match the SELECT options exactly
-        // Let's hardcode common ones based on the SELECT values
         switch(str) {
             case 'E2': return 40; case 'A2': return 45; case 'D3': return 50; 
             case 'G3': return 55; case 'B3': return 59; case 'E4': return 64;
@@ -1041,7 +1127,7 @@
             case 'G2': return 43;
             case 'G3': return 55; case 'D4': return 62; case 'A4': return 69; case 'E5': return 76;
             case 'G4': return 67; case 'C4': return 48; case 'E4': return 64; case 'A4': return 69;
-            default: return 60; // Default C4
+            default: return 60;
         }
     }
 
@@ -1054,14 +1140,13 @@
     function playPiece() {
         if(currentPieceNotes.length === 0) return;
         
-        stopPiece(); // Reset first
+        stopPiece();
         isPlayingPiece = true;
         activeNoteIndex = 0;
         
         document.getElementById('playPieceBtn').classList.add('hidden');
         document.getElementById('stopPieceBtn').classList.remove('hidden');
         
-        // Ensure Mic is on for feedback
         if(!isListening) toggleMic();
 
         processNextNote();
@@ -1075,7 +1160,6 @@
         document.getElementById('playPieceBtn').classList.remove('hidden');
         document.getElementById('stopPieceBtn').classList.add('hidden');
         
-        // Reset visuals
         document.querySelectorAll('.note-row').forEach(el => {
             el.classList.remove('active', 'played');
             const fb = el.querySelector('.feedback-cell');
@@ -1088,7 +1172,6 @@
     function processNextNote() {
         if(!isPlayingPiece) return;
         
-        // Clear previous active
         if(activeNoteIndex >= 0) {
             const prevRow = document.getElementById(`row-${activeNoteIndex}`);
             if(prevRow) prevRow.classList.remove('active');
@@ -1101,24 +1184,20 @@
             return;
         }
 
-        // Set active
         const currRow = document.getElementById(`row-${activeNoteIndex}`);
         if(currRow) {
             currRow.classList.add('active');
             currRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // Metronome Pulse
         metronomeDot.classList.add('pulse');
         setTimeout(() => metronomeDot.classList.remove('pulse'), 200);
 
-        // Play reference tone for this note
         const note = currentPieceNotes[activeNoteIndex];
         const freq = 440 * Math.pow(2, (note.midi - 69) / 12);
         playTone(freq);
 
-        // Schedule next
-        pieceInterval = setTimeout(processNextNote, 2000); // 2 seconds per note
+        pieceInterval = setTimeout(processNextNote, 2000);
     }
 
     function markNotePlayed(index, success, detuneVal) {
@@ -1141,20 +1220,6 @@
             stopPiece();
             alert("Piece Finished! Great job.");
         }, 1000);
-    }
-
-    // --- Utilities ---
-
-    function switchTab(tabName) {
-        ['editor', 'library', 'history', 'ref'].forEach(t => {
-            const el = document.getElementById(`tab-${t}`);
-            if(el) el.classList.add('hidden');
-        });
-        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-        // Update buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
     }
 
     function setupChromaticGrid() {
