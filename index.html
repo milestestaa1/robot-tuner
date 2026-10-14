@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProString Coach v3 - Tabbed</title>
+    <title>ProString Coach v6 - Guest Mode</title>
     <style>
         :root {
             --bg: #121212;
@@ -22,6 +22,8 @@
             --border: #333;
             --radius: 12px;
             --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --warning-bg: #2d2b00;
+            --warning-text: #ffd700;
         }
 
         /* Light Mode Overrides */
@@ -33,6 +35,8 @@
             --text-muted: #666666;
             --border: #dddddd;
             --shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --warning-bg: #fff8e1;
+            --warning-text: #f57f17;
         }
 
         body {
@@ -238,6 +242,8 @@
         button.danger { border-color: var(--error); color: var(--error); }
         button.danger:hover { background: var(--error); color: white; }
         button.small { padding: 4px 8px; font-size: 0.8rem; }
+        button.guest-btn { background: #333; border-color: #555; color: var(--text-muted); }
+        button.guest-btn:hover { background: #444; color: var(--text); }
 
         /* Piece List */
         .piece-list {
@@ -312,15 +318,16 @@
         .fb-warn { color: var(--tuning-warn); }
         .fb-err { color: var(--error); }
 
-        /* Modal */
+        /* Modal / Auth Overlay */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
+            background: rgba(0,0,0,0.85);
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            backdrop-filter: blur(5px);
         }
         .modal {
             background: var(--surface);
@@ -329,35 +336,28 @@
             width: 90%;
             max-width: 400px;
             border: 1px solid var(--primary);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
         }
-        .modal h2 { margin-top: 0; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal h2 { margin-top: 0; text-align: center; }
         .modal-input { width: 100%; margin-bottom: 1rem; box-sizing: border-box; }
-
-        /* Metronome Visual */
-        .metronome-dot {
-            width: 20px;
-            height: 20px;
-            background: #333;
-            border-radius: 50%;
-            margin: 0 auto 1rem auto;
-            transition: background 0.1s;
-        }
-        .metronome-dot.pulse {
-            background: var(--highlight);
-            box-shadow: 0 0 15px var(--highlight);
-        }
-
-        /* Target Indicator */
-        .target-indicator {
+        
+        .auth-toggle {
             text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-            background: #252525;
-            color: var(--string-open);
-            font-weight: bold;
             margin-bottom: 1rem;
-            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--primary);
+            cursor: pointer;
         }
+        .auth-toggle:hover { text-decoration: underline; }
+
+        .login-error { color: var(--error); font-size: 0.85rem; min-height: 1.2em; margin-bottom: 10px; text-align: center; font-weight: bold; }
 
         /* Tabs inside cards */
         .tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
@@ -365,10 +365,6 @@
         .tab-btn.active { background: var(--primary); color: #000; }
 
         .hidden { display: none !important; }
-
-        /* Login Form */
-        .login-form { display: flex; flex-direction: column; gap: 10px; }
-        .login-error { color: var(--error); font-size: 0.8rem; min-height: 1.2em; }
 
         /* Fretboard Visualization */
         .mini-fretboard {
@@ -383,17 +379,101 @@
         }
         .fret-segment.filled { background: var(--secondary); }
 
+        /* New Features Styles */
+        .debug-panel {
+            background: #222;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        .score-badge {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--secondary);
+            margin-left: 10px;
+        }
+
+        .metronome-dot {
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            margin: 0 auto 1rem auto;
+            transition: background 0.1s;
+        }
+        .metronome-dot.pulse {
+            background: var(--highlight);
+            box-shadow: 0 0 15px var(--highlight);
+        }
+
+        .target-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: #252525;
+            color: var(--string-open);
+            font-weight: bold;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        /* Guest Warning Banner */
+        .guest-banner {
+            width: 90%;
+            max-width: 900px;
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            padding: 10px;
+            border-radius: var(--radius);
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            border: 1px solid var(--warning-text);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .guest-banner.hidden { display: none; }
+
     </style>
 </head>
 <body>
 
 <header>
-    <h1>ProString Coach v3</h1>
+    <h1>ProString Coach v6</h1>
     <div class="header-controls">
         <button id="userBtn" onclick="showLoginModal()">Login</button>
         <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
     </div>
 </header>
+
+<!-- Guest Warning Banner -->
+<div id="guestBanner" class="guest-banner hidden">
+    <span style="font-size:1.2rem;">⚠️</span>
+    <span><strong>Guest Mode:</strong> Your practice pieces will not be saved. Refreshing the page will reset your progress.</span>
+</div>
 
 <!-- Main Navigation Tabs -->
 <div class="main-nav">
@@ -417,6 +497,7 @@
             <div style="display:flex; gap:10px;">
                 <button id="modeBtn" onclick="toggleMode()">Mode: Open Strings</button>
                 <button id="micBtn" onclick="toggleMic()">Start Mic</button>
+                <button onclick="toggleDebug()" id="debugBtn">Debug: Off</button>
             </div>
         </div>
 
@@ -442,6 +523,11 @@
             <label style="font-size:0.8rem; display:flex; align-items:center; gap:5px;">
                 Tolerance: <input type="range" id="toleranceRange" min="0" max="20" value="5" style="width:50px; margin:0;">
             </label>
+        </div>
+
+        <div id="debugPanel" class="debug-panel hidden">
+            Raw Frequency: <span id="debugFreq">--</span> Hz<br>
+            RMS Level: <span id="debugRms">--</span>
         </div>
     </div>
 
@@ -495,6 +581,9 @@
                 <div class="metronome-dot" id="metronomeDot"></div>
                 <button onclick="playPiece()" id="playPieceBtn">▶ Play Piece</button>
                 <button onclick="stopPiece()" id="stopPieceBtn" class="danger hidden">■ Stop</button>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
             </div>
         </div>
 
@@ -531,16 +620,23 @@
 
 </div>
 
-<!-- Login Modal -->
+<!-- LOGIN / REGISTER MODAL (SEPARATE PAGE LOOK) -->
 <div id="loginModal" class="modal-overlay">
     <div class="modal">
-        <h2>Login / Register</h2>
-        <div class="login-form">
-            <input type="text" id="usernameInput" placeholder="Username" class="modal-input">
-            <input type="password" id="passwordInput" placeholder="Password" class="modal-input">
-            <div class="login-error" id="loginError"></div>
-            <button class="primary" onclick="handleLogin()">Log In</button>
-            <button onclick="closeModal()">Cancel</button>
+        <h2 id="authTitle">Welcome Back</h2>
+        <div id="authError" class="login-error"></div>
+        
+        <form onsubmit="event.preventDefault(); handleLogin();" class="login-form" style="display:flex; flex-direction:column; gap:10px;">
+            <input type="text" id="usernameInput" placeholder="Username" class="modal-input" required>
+            <input type="password" id="passwordInput" placeholder="Password" class="modal-input" required>
+            
+            <button type="submit" id="authSubmitBtn" class="primary">Log In</button>
+            <button type="button" class="guest-btn" onclick="continueAsGuest()">Continue as Guest</button>
+            <button type="button" onclick="closeModal()">Cancel</button>
+        </form>
+        
+        <div class="auth-toggle" onclick="toggleAuthMode()">
+            <span id="authToggleText">Don't have an account? Register</span>
         </div>
     </div>
 </div>
@@ -568,6 +664,7 @@
     let animationId = null;
     let currentInstrument = "violin";
     let isFrettedMode = false;
+    let debugMode = false;
     
     // Piece Editing State
     let currentPieceNotes = [];
@@ -592,9 +689,23 @@
     const noteStringSelect = document.getElementById('noteStringSelect');
     const noteFretSelect = document.getElementById('noteFretSelect');
     const loginModal = document.getElementById('loginModal');
-    const loginError = document.getElementById('loginError');
+    const authError = document.getElementById('authError');
     const metronomeDot = document.getElementById('metronomeDot');
     const instStringsContainer = document.getElementById('instStrings');
+    const debugPanel = document.getElementById('debugPanel');
+    const debugFreq = document.getElementById('debugFreq');
+    const debugRms = document.getElementById('debugRms');
+    const progressBar = document.getElementById('progressBar');
+    const guestBanner = document.getElementById('guestBanner');
+    
+    // Auth UI Elements
+    const authTitle = document.getElementById('authTitle');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authToggleText = document.getElementById('authToggleText');
+    const usernameInput = document.getElementById('usernameInput');
+    const passwordInput = document.getElementById('passwordInput');
+
+    let isRegisterMode = false;
 
     // --- Initialization ---
     window.onload = () => {
@@ -630,35 +741,53 @@
         localStorage.setItem('proStringData', JSON.stringify(appData));
     }
 
-    // --- User Auth ---
+    // --- Auth Logic ---
+
     function showLoginModal() {
         loginModal.style.display = 'flex';
-        document.getElementById('usernameInput').focus();
+        resetAuthForm();
     }
 
     function closeModal() {
         loginModal.style.display = 'none';
-        loginError.textContent = '';
-        document.getElementById('usernameInput').value = '';
-        document.getElementById('passwordInput').value = '';
+    }
+
+    function resetAuthForm() {
+        usernameInput.value = '';
+        passwordInput.value = '';
+        authError.textContent = '';
+        usernameInput.focus();
+    }
+
+    function toggleAuthMode() {
+        isRegisterMode = !isRegisterMode;
+        if(isRegisterMode) {
+            authTitle.innerText = "Create Account";
+            authSubmitBtn.innerText = "Register";
+            authToggleText.innerText = "Already have an account? Log In";
+        } else {
+            authTitle.innerText = "Welcome Back";
+            authSubmitBtn.innerText = "Log In";
+            authToggleText.innerText = "Don't have an account? Register";
+        }
+        resetAuthForm();
     }
 
     function handleLogin() {
-        const u = document.getElementById('usernameInput').value.trim();
-        const p = document.getElementById('passwordInput').value.trim();
-        
+        const u = usernameInput.value.trim();
+        const p = passwordInput.value.trim();
+
         if(!u || !p) {
-            loginError.textContent = "Please enter both username and password.";
+            authError.textContent = "Please enter both fields.";
             return;
         }
 
-        if(appData.users[u]) {
-            if(appData.users[u].password === p) {
-                loginUser(u);
-            } else {
-                loginError.textContent = "Incorrect password.";
+        if(isRegisterMode) {
+            // Registration Logic
+            if(appData.users[u]) {
+                authError.textContent = "Username already taken.";
+                return;
             }
-        } else {
             appData.users[u] = {
                 password: p,
                 pieces: [],
@@ -666,39 +795,67 @@
             };
             saveData();
             loginUser(u);
+        } else {
+            // Login Logic
+            if(!appData.users[u]) {
+                authError.textContent = "User not found.";
+                return;
+            }
+            if(appData.users[u].password !== p) {
+                authError.textContent = "Incorrect password.";
+                return;
+            }
+            loginUser(u);
         }
+    }
+
+    function continueAsGuest() {
+        loginUser(null);
     }
 
     function loginUser(username) {
         currentUser = username;
-        sessionStorage.setItem('proStringUser', username);
+        
+        if(currentUser) {
+            sessionStorage.setItem('proStringUser', username);
+            guestBanner.classList.add('hidden');
+        } else {
+            sessionStorage.removeItem('proStringUser');
+            guestBanner.classList.remove('hidden');
+        }
+
         loginModal.style.display = 'none';
         renderUserPanel();
         renderLibrary();
         renderTrash();
         
-        if(appData.users[username].pieces.length > 0) {
-            loadPieceIntoEditor(appData.users[username].pieces[0].id);
+        if(currentUser && appData.users[currentUser].pieces.length > 0) {
+            loadPieceIntoEditor(appData.users[currentUser].pieces[0].id);
         } else {
             startNewPiece();
         }
     }
 
     function logout() {
-        currentUser = null;
-        sessionStorage.removeItem('proStringUser');
         stopPiece();
-        switchMainTab('tuner');
-        showLoginModal();
+        if(currentUser) {
+            // If switching from registered user, just log out
+            loginUser(null);
+        } else {
+            // If switching from guest, show login modal
+            showLoginModal();
+        }
     }
 
     function renderUserPanel() {
         const panel = document.getElementById('userBtn');
-        panel.innerText = currentUser ? `Logout (${currentUser})` : 'Login';
-        panel.onclick = () => {
-            if(currentUser) logout();
-            else showLoginModal();
-        };
+        if(currentUser) {
+            panel.innerText = `Logout (${currentUser})`;
+            panel.onclick = () => logout();
+        } else {
+            panel.innerText = 'Login';
+            panel.onclick = () => showLoginModal();
+        }
     }
 
     // --- Theme Toggle ---
@@ -844,6 +1001,15 @@
         analyser.getFloatTimeDomainData(buf);
         let freq = autoCorrelate(buf, audioContext.sampleRate);
 
+        // Debug Info
+        if(debugMode) {
+            let rms = 0;
+            for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+            rms = Math.sqrt(rms / buf.length);
+            debugFreq.innerText = freq !== -1 ? freq.toFixed(2) : '--';
+            debugRms.innerText = rms.toFixed(4);
+        }
+
         if (freq !== -1) {
             let noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
             let noteIdx = Math.round(noteNum);
@@ -920,7 +1086,11 @@
     }
 
     function saveCurrentPiece() {
-        if(!currentUser) return;
+        if(!currentUser) {
+            alert("You are a guest! Your piece will be lost if you refresh.");
+            // Allow saving locally but it won't persist across sessions
+        }
+
         const name = pieceNameInput.value.trim() || `Untitled ${Date.now()}`;
         
         const enrichedNotes = currentPieceNotes.map(n => {
@@ -1157,6 +1327,7 @@
         activeNoteIndex = -1;
         clearTimeout(pieceInterval);
         metronomeDot.classList.remove('pulse');
+        progressBar.style.width = '0%';
         document.getElementById('playPieceBtn').classList.remove('hidden');
         document.getElementById('stopPieceBtn').classList.add('hidden');
         
@@ -1189,6 +1360,10 @@
             currRow.classList.add('active');
             currRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
+        // Update progress bar
+        const progress = ((activeNoteIndex) / currentPieceNotes.length) * 100;
+        progressBar.style.width = `${progress}%`;
 
         metronomeDot.classList.add('pulse');
         setTimeout(() => metronomeDot.classList.remove('pulse'), 200);
@@ -1230,6 +1405,12 @@
             btn.onclick = () => playReferenceNote(note);
             chromaticGrid.appendChild(btn);
         });
+    }
+
+    function toggleDebug() {
+        debugMode = !debugMode;
+        debugPanel.classList.toggle('hidden');
+        document.getElementById('debugBtn').innerText = `Debug: ${debugMode ? 'On' : 'Off'}`;
     }
 
 </script>
